@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.rogmann.llm.LlmExecutor;
+import org.rogmann.llm.tokenizer.Tokenizer;
 
 /**
  * Class used to embed tokens in hidden states.
@@ -64,6 +65,31 @@ public class Embeddings {
 			LOG.fine("Last Embed: " + Arrays.toString(Arrays.copyOfRange(lastEmbedding, 0, 3)));
 		}
 		return lastEmbedding;
+	}
+
+	/**
+	 * Compute the token with maximum probability in the last state of the hidden state.
+	 * @param hiddenState hidden state
+	 * @param tokenizer tokenizer (used for logging only)
+	 * @return index of next token
+	 */
+	public int computeMaxToken(float[][][] hiddenState, Tokenizer tokenizer) {
+		final float[] lastState = hiddenState[0][hiddenState[0].length - 1];
+		final float[] lastEmbedding = computeLastEmbedding(lastState);
+		int idx = 0;
+		float max = -1e10f;
+		for (int i = 0; i < lastEmbedding.length; i++) {
+			if (lastEmbedding[i] > max) {
+				max = lastEmbedding[i];
+				idx = i;
+				String token = tokenizer.decode(i);
+				if (LOG.isLoggable(Level.FINE)) {
+					LOG.fine(String.format("idx=%d, max=%f, token=%s (%s)",
+							idx, max, token, tokenizer.convertToInternal(token)));
+				}
+			}
+		}
+		return idx;
 	}
 
 }
