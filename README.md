@@ -4,7 +4,7 @@ The original idea for JBLOOMz was to consider the possibility of running a large
 
 JBLOOMz (Java-BLOOMz) is a small Java implementation of the tokenizer and model used by the multilingual language model [BLOOM](https://huggingface.co/bigscience/bloom).
 
-For example you can download the model [bloom/bloomz-560m|https://huggingface.co/bigscience/bloomz-560m] (see below), it has 560 million parameters and needs 4.3 GB of disk space, and use JBLOOMz to generate text based on this model.
+For example you can download the model [bloom/bloomz-560m](https://huggingface.co/bigscience/bloomz-560m) (see below), it has 560 million parameters and needs 4.3 GB of disk space, and use JBLOOMz to generate text based on this model.
 
     Prompt: Translate to Chinese: I write a program in Java.
     Response: 我在Java中写程序。</s>
@@ -39,6 +39,10 @@ It is interesting to watch the execution of matrix operations resulting in natur
     idx=90364, max=400,886292, token= pintor (Ġpintor)
     End: 2023-08-10T22:15:51.136294
     Token:  pintor
+
+## Why BLOOM?
+
+There are a lot of LLMs: GPT2, Llama, Llama2, BLOOM, MPT, RedPajama, to name a few. BLOOM contains a lot of languages and is open-access. I came across BLOOM when I looked at the models created by [Malte Ostendorff](https://ostendorff.org), e.g. <https://huggingface.co/malteos/bloom-1b5-clp-german>.
 
 ## Contents
 
@@ -117,7 +121,7 @@ A consolation is the loading of the model at the beginning which is fast.
 
 ## Getting a model
 
-You can get a lot of interesting [models](https://huggingface.co/models?pipeline_tag=text-generation&sort=trending) at [Hugging Face](https://huggingface.co/). You can use git or write a tiny python script to download a model, see [Downloading models|https://huggingface.co/].
+You can get a lot of interesting [models](https://huggingface.co/models?pipeline_tag=text-generation&sort=trending) at [Hugging Face](https://huggingface.co/). You can use git or write a tiny python script to download a model, see [Downloading models](https://huggingface.co/).
 
 JBLOOMz supports BLOOM-based models only.
 
