@@ -1,5 +1,8 @@
 package org.rogmann.llm.tokenizer;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,6 +21,9 @@ import org.rogmann.llm.json.JSONObject;
  * <p>This class implements a byte-level BPE (Byte-Pair Encoding).</p>
  */
 public class BPETokenizer implements Tokenizer {
+	/** name of the tokenizer JSON-file */
+	private static final String TOKENIZER_JSON = "tokenizer.json";
+
 	/** byte level mapping from byte to char */
 	private static final char[] BYTE_TO_CHAR;
 	/** byte level mapping from char to byte */
@@ -70,10 +76,33 @@ public class BPETokenizer implements Tokenizer {
 
 	/**
 	 * Constructor
-	 * @param is input-stream of JSON-tokenizer
+	 * @param folder folder containing tokenizer.json or tokenizer.json itself
+	 */
+	public BPETokenizer(File folder) throws IOException {
+		this(createTokenizerInputStream(folder), TOKENIZER_JSON);
+	}
+
+	/**
+	 * Creates an input-stream to read tokenizer.json in the given folder.
+	 * @param folder model-folder
+	 * @return input-stream
 	 * @throws IOException in case of an IO-error
 	 */
-	public BPETokenizer(final InputStream is) throws IOException {
+	private static InputStream createTokenizerInputStream(File folder) throws IOException {
+		if (!folder.isDirectory()) {
+			throw new IOException(String.format("File (%s) is neither directory nor file", folder));
+		}
+		final File fileTokenizer = new File(folder, TOKENIZER_JSON);
+		return new BufferedInputStream(new FileInputStream(fileTokenizer));
+	}
+
+	/**
+	 * Constructor
+	 * @param is input-stream of JSON-tokenizer
+	 * @param name name of the input-stream
+	 * @throws IOException in case of an IO-error
+	 */
+	public BPETokenizer(final InputStream is, final String name) throws IOException {
 		final StringBuilder sb = new StringBuilder(500);
 		final char[] cBuf = new char[1024];
 		try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
@@ -84,6 +113,9 @@ public class BPETokenizer implements Tokenizer {
 				}
 				sb.append(cBuf, 0, len);
 			}
+		}
+		catch (IOException e) {
+			throw new IOException("IO-error while reading " + name, e);
 		}
 		fJson = new JSONObject(sb.toString());
 		fVersion = fJson.getString("version");
@@ -146,6 +178,15 @@ public class BPETokenizer implements Tokenizer {
 	public String decode(int idx) {
 		String blToken = mapIdxToken.get(Integer.valueOf(idx));
 		return convertFromInternal(blToken); // 'Ġ' maps to ' '.
+	}
+
+	/** {@inheritDoc] */
+	@Override
+	public int[][] appendToken(int[][] inputIds, int idx) {
+		final int[][] inputIdsNext = new int[1][inputIds[0].length + 1];
+		System.arraycopy(inputIds[0], 0, inputIdsNext[0], 0, inputIds[0].length);
+		inputIdsNext[0][inputIds[0].length] = idx;
+		return inputIdsNext;
 	}
 
 	/** {@inheritDoc] */
