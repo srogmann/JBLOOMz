@@ -3,6 +3,7 @@ package org.rogmann.llm.bloom;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.rogmann.llm.nn.PickleReducerTorch;
 import org.rogmann.llm.nn.Tensor;
 import org.rogmann.llm.nn.TensorProvider;
 import org.rogmann.llm.pickle.PickleReader;
+import org.rogmann.llm.tokenizer.Tokenizer;
 
 public class BloomModel implements TensorProvider {
 	/** Logger */
@@ -161,7 +163,7 @@ public class BloomModel implements TensorProvider {
 		return tensor;
 	}
 
-	public float[][][] forward(final int[][] inputIds) throws IOException {
+	public float[][][] forward(final int[][] inputIds) {
 		final int batchSize = inputIds.length;
 		final int seqLen = inputIds[0].length;
 
@@ -227,6 +229,31 @@ public class BloomModel implements TensorProvider {
 		}
 
 		return hiddenStates;
+	}
+
+	/**
+	 * Text generation: Computes the next tokens.
+	 * @param tokenizer LLM-tokenizer
+	 * @param model LLM-model
+	 * @param inputSentence input
+	 * @param maxToken maximum number of tokens to be generated
+	 * @return generated list of tokens
+	 */
+	public List<String> computeNextTokens(Tokenizer tokenizer, BloomModel model, String inputSentence, int maxToken) {
+		int[][] inputIds = tokenizer.encode(inputSentence);
+		final List<String> listToken = new ArrayList<>();
+		for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
+			LOG.info("Inference " + idxInf);
+			
+			final float[][][] hiddenState = forward(inputIds);
+			final int idx = model.getEmbeddings().computeMaxToken(hiddenState, tokenizer);
+			final String sToken = tokenizer.decode(idx);
+			LOG.info("Token: " + sToken);
+			listToken.add(sToken);
+			
+			inputIds = tokenizer.appendToken(inputIds, idx);
+		}
+		return listToken;
 	}
 
 }
