@@ -1,8 +1,8 @@
 # JBLOOMz
 
-The original idea for JBLOOMz was to consider the possibility of running a large language model in a pure Java environment without python and the need of consuming REST APIs. It was clear that this approach would not be as fast and as comprehensive as pytorch, or more precisely, [🤗 Transformers](https://huggingface.co/docs/transformers/index).
+The original idea for JBLOOMz was to consider the possibility of running a large language model in a pure Java environment without python and the need of consuming REST APIs. It was clear that this approach would not be as fast and as comprehensive as pytorch, or more precisely, [🤗 Transformers](https://huggingface.co/docs/transformers/index). I you want to play with a fast and versatile framework use the python- and rust-based 🤗 Transformers.
 
-JBLOOMz (Java-BLOOMz) is a small Java implementation of the tokenizer and model used by the multilingual language model [BLOOM](https://huggingface.co/bigscience/bloom).
+JBLOOMz (Java-BLOOMz) is a small (<5000 loc) Java implementation of the tokenizer and model used by the multilingual language model [BLOOM](https://huggingface.co/bigscience/bloom).
 
 For example you can download the model [bloom/bloomz-560m](https://huggingface.co/bigscience/bloomz-560m) (see below), it has 560 million parameters and needs 4.3 GB of disk space, and use JBLOOMz to generate text based on this model.
 
@@ -40,6 +40,8 @@ It is interesting to watch the execution of matrix operations resulting in natur
     End: 2023-08-10T22:15:51.136294
     Token:  pintor
 
+You can also infer fine-trained BLOOM based models, see [llm-instruction-sample](https://github.com/srogmann/llm-instruction-sample).
+
 ## Why BLOOM?
 
 There are a lot of LLMs: GPT2, Llama, Llama2, BLOOM, MPT, RedPajama, to name a few. BLOOM contains a lot of languages and is open-access. I came across BLOOM when I looked at the models created by [Malte Ostendorff](https://ostendorff.org), e.g. <https://huggingface.co/malteos/bloom-1b5-clp-german>.
@@ -57,15 +59,15 @@ The program has the following packages (based at org.rogmann).
 
 ## Computations
 
-JBLOOMz uses float only. It might read models containing FLOAT16 or BFLOAT16 but executes them using FLOAT32. Therefore very large models need a lot of memory (heap space). I didn't had to use
+JBLOOMz uses float only. It might read models containing FLOAT16 or BFLOAT16 but executes them using FLOAT32. Therefore very large models need a lot of memory (heap space). You need
 
     -Xmx32000m
 
-in other projects.
+to execute a 1B5 model.
 
 ## Performance
 
-The computation use the following interface to distribute the work on several threads:
+The computation uses the following interface to distribute the work on several threads:
 
     public interface LlmTaskLoopFunction {
     
@@ -138,6 +140,7 @@ JBLOOMz uses JRE-based java.util.logging only. One might use a bridge to ones fa
 I wrote this project in my free time and I like my free time so support is given by studying the following links:
 
 * <https://huggingface.co/bigscience/bloom>
+* BLOOM paper: <https://arxiv.org/abs/2211.05100>
 * Attention Is All You Need: <https://arxiv.org/abs/1706.03762>
 * <https://huggingface.co/docs/transformers/index>
 * <https://github.com/huggingface/transformers/tree/main/src/transformers/models/bloom>
