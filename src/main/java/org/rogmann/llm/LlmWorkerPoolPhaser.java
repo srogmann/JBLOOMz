@@ -19,6 +19,8 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 	private final Phaser phaserFinished;
 	
 	private final AtomicBoolean isFinished = new AtomicBoolean(false);
+	/** exception while executing a computation */
+	private final AtomicReference<Throwable> refECause = new AtomicReference<>();
 	
 	private final Runnable[] tasks;
 	
@@ -36,7 +38,7 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 		     };
 		pool = new LlmWorkerThread[1 + nThreads];
 		for (int i = 0; i < nThreads; i++) {
-			pool[i] = new LlmWorkerThread(i, phaserStart, phaserFinished);
+			pool[i] = new LlmWorkerThread(i, phaserStart, phaserFinished, refECause);
 			pool[i].start();
 		}
 		tasks = new Runnable[nThreads];
@@ -53,6 +55,10 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 		LOGGER.finer("Wait for tasks");
 		phaserFinished.arriveAndAwaitAdvance();
 		LOGGER.finer("End of Tasks");
+		final Throwable eCause = refECause.get();
+		if (eCause != null) {
+			throw new RuntimeException("Exception while executing runnable", eCause);
+		}
 	}
 
 	@Override
@@ -101,13 +107,15 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 		private final int idxThread;
 		private final Phaser phaserStart;
 		private final Phaser phaserTaskFinished;
+		private final AtomicReference<Throwable> eCause;
 		final AtomicReference<Runnable> task = new AtomicReference<>();
 
-		LlmWorkerThread(int idxThread, Phaser phaserStart, Phaser phaserTaskFinished) {
+		LlmWorkerThread(int idxThread, Phaser phaserStart, Phaser phaserTaskFinished, AtomicReference<Throwable> eCause) {
 			super("LlmWorker-" + idxThread);
 			this.idxThread = idxThread;
 			this.phaserStart = phaserStart;
 			this.phaserTaskFinished = phaserTaskFinished;
+			this.eCause = eCause;
 		}
 
 		@Override
@@ -122,8 +130,16 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 					LOGGER.finer("Thread " + idxThread + ": start runnable");
 				}
 				final Runnable runnable = task.get();
-				runnable.run();
-				phaserTaskFinished.arrive();
+				try {
+					runnable.run();
+				}
+				catch (Throwable e) {
+					LOGGER.log(Level.SEVERE, "Exception in run", e);
+					eCause.set(e);
+				}
+				finally {
+					phaserTaskFinished.arrive();
+				}
 				cnt++;
 			}
 			if (LOGGER.isLoggable(Level.FINER)) {
