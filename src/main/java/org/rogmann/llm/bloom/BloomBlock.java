@@ -20,11 +20,11 @@ public class BloomBlock {
 	/** Logger */
 	private static final Logger LOG = Logger.getLogger(BloomBlock.class.getName());
 
-	private final int fHiddenSize;
+	protected final int fHiddenSize;
 
-	private final int fNumHeads;
+	protected final int fNumHeads;
 
-	private final int fLayer;
+	protected final int fLayer;
 
 	private final LayerNorm inputLayerNorm;
 
@@ -129,7 +129,6 @@ public class BloomBlock {
 			}
 		}
 
-		final int hiddenSize = hiddenStates[0][0].length;
 		attention.forward(layernormOutput, fusedQkv, alibi, hiddenStates, attentionMask, attentionResidual);
 		if (LOG.isLoggable(Level.FINER)) {
 			for (int h = 0; h < 3; h++) {

@@ -2,8 +2,6 @@ package org.rogmann.llm;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,8 +18,6 @@ public class LlmWorkerPoolBusySpin implements LlmExecutor {
 	
 	private final AtomicBoolean isFinished = new AtomicBoolean(false);
 	
-	private final Runnable[] tasks;
-	
 	private int nCalls = 0;
 	private int nCallsLoop = 0;
 
@@ -33,7 +29,6 @@ public class LlmWorkerPoolBusySpin implements LlmExecutor {
 			pool[i] = new LlmWorkerThread(i);
 			pool[i].start();
 		}
-		tasks = new Runnable[nThreads];
 	}
 
 	public void startTasks(LlmTaskFunction taskFunction) {

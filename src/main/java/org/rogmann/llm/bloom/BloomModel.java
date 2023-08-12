@@ -37,7 +37,7 @@ public class BloomModel implements TensorProvider {
 	private final int hiddenSize;
 
 	/** maximum batch-size */
-	private final int maxBatchSize;
+	protected final int maxBatchSize;
 	
 	/** map from key to tensor */
 	private final Map<String, Tensor> mapTensors = new HashMap<>(100);

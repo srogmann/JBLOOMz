@@ -19,8 +19,6 @@ public class LlmWorkerPoolReentrantLock implements LlmExecutor {
 	
 	private final AtomicBoolean isFinished = new AtomicBoolean(false);
 	
-	private final Runnable[] tasks;
-	
 	private int nCalls = 0;
 	private int nCallsLoop = 0;
 
@@ -33,7 +31,6 @@ public class LlmWorkerPoolReentrantLock implements LlmExecutor {
 			pool[i].lockStart.lock();
 			pool[i].start();
 		}
-		tasks = new Runnable[nThreads];
 	}
 
 	public void startTasks(LlmTaskFunction taskFunction) {

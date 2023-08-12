@@ -1,6 +1,5 @@
 package org.rogmann.llm.nn;
 
-import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 

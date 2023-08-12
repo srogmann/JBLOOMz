@@ -22,8 +22,6 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 	/** exception while executing a computation */
 	private final AtomicReference<Throwable> refECause = new AtomicReference<>();
 	
-	private final Runnable[] tasks;
-	
 	private int nCalls = 0;
 	private int nCallsLoop = 0;
 
@@ -41,7 +39,6 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 			pool[i] = new LlmWorkerThread(i, phaserStart, phaserFinished, refECause);
 			pool[i].start();
 		}
-		tasks = new Runnable[nThreads];
 	}
 	
 	public void startTasks(LlmTaskFunction taskFunction) {

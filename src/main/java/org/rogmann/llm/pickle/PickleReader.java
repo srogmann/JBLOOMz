@@ -384,7 +384,7 @@ public class PickleReader {
 		return i;
 	}
 
-	private int readInt32(InputStream is) throws IOException {
+	protected int readInt32BE(InputStream is) throws IOException {
 		int i = (readUInt8(is) << 24);
 		i += (readUInt8(is) << 16);
 		i += (readUInt8(is) << 8);

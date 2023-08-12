@@ -1,7 +1,5 @@
 package org.rogmann.llm.nn;
 
-import org.rogmann.llm.LlmExecutor;
-
 /**
  * Computes the layer norm.
  * 
