@@ -58,7 +58,7 @@ public enum PickleOpcode {
 	GET('g'),
 	/** Opcode BINGET:   "    "    "    "   "   "  ;   "    " 1-byte arg */
 	BINGET('h'),
-	/** Opcode INST: build & push class instance */
+	/** Opcode INST: build &amp; push class instance */
 	INST('i'),
 	/** Opcode LONG_BINGET: push item from memo on stack; index is 4-byte arg */
 	LONG_BINGET('j'),
@@ -66,7 +66,7 @@ public enum PickleOpcode {
 	LIST('l'),
 	/** Opcode EMPTY_LIST: push empty list */
 	EMPTY_LIST(']'),
-	/** Opcode OBJ: build & push class instance */
+	/** Opcode OBJ: build &amp; push class instance */
 	OBJ('o'),
 	/** Opcode PUT: store stack top in memo; index is string arg */
 	PUT('p'),
@@ -107,7 +107,7 @@ public enum PickleOpcode {
 	NEWTRUE(0x88),
 	/** Opcode NEWFALSE: push False */
 	NEWFALSE(0x89),
-	/** Opcode LONG1: push long from < 256 bytes */
+	/** Opcode LONG1: push long from &lt; 256 bytes */
 	LONG1(0x8a),
 	/** Opcode LONG4: push really big long */
 	LONG4(0x8b),
@@ -118,12 +118,12 @@ public enum PickleOpcode {
 
 	/** Opcode BINBYTES: push bytes; counted binary string argument */
 	BINBYTES('B'),
-	/** Opcode SHORT_BINBYTES:  "     "   ;    "      "       "      " < 256 bytes */
+	/** Opcode SHORT_BINBYTES:  "     "   ;    "      "       "      " &lt; 256 bytes */
 	SHORT_BINBYTES('C'),
 
 	// Protocol 4
 
-	/** Opcode SHORT_BINUNICODE: push short string; UTF-8 length < 256 bytes */
+	/** Opcode SHORT_BINUNICODE: push short string; UTF-8 length &lt; 256 bytes */
 	SHORT_BINUNICODE(0x8c),
 	/** Opcode BINUNICODE8: push very long string */
 	BINUNICODE8(0x8d),

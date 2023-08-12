@@ -111,7 +111,7 @@ public class JSONObject {
 
 	/**
 	 * Reads a JSON-object.
-	 * @param string key
+	 * @param key key
 	 * @return JSON-object
 	 */
 	public JSONObject getJSONObject(String key) {

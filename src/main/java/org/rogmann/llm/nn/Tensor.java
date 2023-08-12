@@ -65,6 +65,7 @@ public class Tensor {
 	 * @param stride stride
 	 * @param requiresGrad <code>true</code> if tensor requires gradients
 	 * @param executor LLM-executor
+	 * @throws LlmConfigException in case of a configuration error or out of memory error
 	 */
 	public Tensor(final Storage storage, final int storageOffset, final int[] size,
 			final int[] stride, final boolean requiresGrad, final LlmExecutor executor) throws LlmConfigException {
@@ -370,6 +371,7 @@ public class Tensor {
 	 * batch1 and batch2 are view in fusedQkv, the view consists of heads.
 	 * 
 	 * input is this tensor (e.g. ALiBi-tensor) of shape executor(batchSize * numHeads, 1, numSeq)
+	 * @param numSeq length of sequence
 	 * @param fusedQkv tensor containing batch1 and batch2
 	 * @param numBlocks number of blocks
 	 * @param numHeads number of heads
@@ -421,6 +423,7 @@ public class Tensor {
 	 * @param headDim dimension of a head
 	 * @param idxBlock2 index of block of the right matrix
 	 * @param contextLayer tensor to be filled, shape (batch_size, seq_length, num_heads * head_dim)
+	 * @param executor executor
 	 */
 	public static void bmmView4(float[][][][] multResult, float[][][] fusedQkv, int numBlocks, int numHeads, int headDim, int idxBlock2,
 			float[][][] contextLayer, LlmExecutor executor) {

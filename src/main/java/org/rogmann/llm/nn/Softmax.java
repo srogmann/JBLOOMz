@@ -72,6 +72,7 @@ public class Softmax {
 	/**
 	 * Computes the softmax of a 4d-tensor in-place in the last dimension.
 	 * @param input input and output
+	 * @param executor executor
 	 */
 	public static void softmaxInlineLastDim(float[][][][] input, LlmExecutor executor) {
 		for (float[][][] mat1 : input) {

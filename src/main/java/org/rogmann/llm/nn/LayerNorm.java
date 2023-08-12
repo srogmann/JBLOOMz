@@ -61,9 +61,6 @@ public class LayerNorm {
 	 * Computes the layer normalization of a 1d-tensor.
 	 * The gain is set to 1, the bias is set to 0.
 	 * @param input input
-	 * @param eps value added to the denominator
-	 * @param alpha gain respective weight
-	 * @param beta bias
 	 * @return normalized input
 	 */
 	public float[] normalize(float[] input) {

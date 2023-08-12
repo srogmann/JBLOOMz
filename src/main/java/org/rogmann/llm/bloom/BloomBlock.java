@@ -100,10 +100,10 @@ public class BloomBlock {
 
 	/**
 	 * Computes a BLOOM-block.
-	 * @param inputEmbeds
+	 * @param inputEmbeds input embeddings
 	 * @param hiddenStates tensor (batchSize, numSeq, hiddenSize)
 	 * @param fusedQkv temporary tensor ([batchSize][numSeq][3 * dimHidden])
-	 * @param attentionMask
+	 * @param attentionMask attention mask
 	 * @param alibi ALiBi-tensor
 	 * @param attentionResidual attention residual
 	 * @param output output tensor (batchSize, numSeq, hiddenSize)

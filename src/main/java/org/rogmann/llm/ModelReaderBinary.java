@@ -29,7 +29,7 @@ public class ModelReaderBinary implements Closeable {
 	/**
 	 * Constructor
 	 * @param file file containing binary data (weights, ...)
-	 * @param preferUpacked <code>true</code> if the model-zip might have been unzipped on disk
+	 * @param preferUnpacked <code>true</code> if the model-zip might have been unzipped on disk
 	 * @throws IOException in case of an IO-error
 	 */
 	public ModelReaderBinary(final File file, final boolean preferUnpacked) throws IOException {
@@ -47,8 +47,9 @@ public class ModelReaderBinary implements Closeable {
 	}
 
 	/**
-	 * Name of the entry
+	 * Reads an data entry.
 	 * @param entry name, e.g. "data.pkl" or "data/103"
+	 * @return input-stream
 	 * @throws IOException in case of an IO-error
 	 */
 	public InputStream getAsStream(final String entry) throws IOException {

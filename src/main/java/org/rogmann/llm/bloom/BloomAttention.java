@@ -34,6 +34,7 @@ public class BloomAttention {
 	 * @param numHeads number of attention-head
 	 * @param queryKeyValue weights to compute query, key and value
 	 * @param dense linear dense transformation
+	 * @param executor executor
 	 */
 	public BloomAttention(final int hiddenSize, final int numHeads, Linear queryKeyValue, Linear dense,
 			LlmExecutor executor) {

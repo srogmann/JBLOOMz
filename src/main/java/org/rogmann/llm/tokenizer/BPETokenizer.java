@@ -77,6 +77,7 @@ public class BPETokenizer implements Tokenizer {
 	/**
 	 * Constructor
 	 * @param folder folder containing tokenizer.json or tokenizer.json itself
+	 * @throws IOException in case of an IO-error
 	 */
 	public BPETokenizer(File folder) throws IOException {
 		this(createTokenizerInputStream(folder), TOKENIZER_JSON);
@@ -130,13 +131,13 @@ public class BPETokenizer implements Tokenizer {
 		}
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public int size() {
 		return mapTokenIdx.size();
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public int[][] encode(String s) {
 		final List<Integer> list = new ArrayList<>();
@@ -173,14 +174,14 @@ public class BPETokenizer implements Tokenizer {
 		return output;
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public String decode(int idx) {
 		String blToken = mapIdxToken.get(Integer.valueOf(idx));
 		return convertFromInternal(blToken); // 'Ġ' maps to ' '.
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public int[][] appendToken(int[][] inputIds, int idx) {
 		final int[][] inputIdsNext = new int[1][inputIds[0].length + 1];
@@ -189,7 +190,7 @@ public class BPETokenizer implements Tokenizer {
 		return inputIdsNext;
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public String convertToInternal(String s) {
 		final byte[] buf = s.getBytes(StandardCharsets.UTF_8);
@@ -200,7 +201,7 @@ public class BPETokenizer implements Tokenizer {
 		return new String(cBuf);
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public String convertFromInternal(String s) {
 		final byte[] buf = new byte[s.length()];
@@ -218,7 +219,7 @@ public class BPETokenizer implements Tokenizer {
 		return new String(buf, StandardCharsets.UTF_8);
 	}
 
-	/** {@inheritDoc] */
+	/** {@inheritDoc} */
 	@Override
 	public String getVersion() {
 		return fVersion;

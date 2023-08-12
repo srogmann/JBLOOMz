@@ -13,6 +13,11 @@ public class Linear {
 	private float[] bias;
 	private final LlmExecutor executor;
 
+	/**
+	 * Constructor
+	 * @param mat matrix
+	 * @param executor executor
+	 */
 	public Linear(float[][] mat, LlmExecutor executor) {
 		this.dim1 = mat.length;
 		this.dim2 = mat[0].length;
@@ -21,6 +26,12 @@ public class Linear {
 		this.executor = executor;
 	}
 	
+	/**
+	 * Constructor
+	 * @param mat matrix
+	 * @param bias bias
+	 * @param executor executor
+	 */
 	public Linear(float[][] mat, float[] bias, LlmExecutor executor) {
 		this.dim1 = mat.length;
 		this.dim2 = mat[0].length;
@@ -32,8 +43,6 @@ public class Linear {
 	/**
 	 * Computes input * transposed(mat) + bias.
 	 * @param input input
-	 * @param mat matrix
-	 * @param bias bias
 	 * @param output result
 	 */
 	public void mult(float[][][] input, final float[][][] output) {
