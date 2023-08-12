@@ -78,11 +78,7 @@ The program has the following packages (based at org.rogmann).
 
 ## Computations
 
-JBLOOMz uses float only. It might read models containing FLOAT16 or BFLOAT16 but executes them using FLOAT32. Therefore very large models need a lot of memory (heap space). You need
-
-    -Xmx32000m
-
-to execute a 1B5 model.
+JBLOOMz uses float only. It might read models containing FLOAT16 or BFLOAT16 but executes them using FLOAT32. Therefore very large models need a lot of memory (heap space, e.g. 3000m for bloomz-560m).
 
 ## Performance
 
@@ -140,6 +136,10 @@ One question is how the different threads treat the float-arrays. I'm used to At
 
 A consolation is the loading of the model at the beginning which is fast.
 
+When this Java implementation needs about 15 seconds to generate "我在Java中写程序。</s>" (bloomz-560), pytorch and 🤗 Transformers do that in less than one second on the same machine, without using the GPU!
+
+Using the model bloomz-3b pytorch needs 3 seconds, Java about 82 seconds and about 13 - 14 GB heap space.
+
 ## Getting a model
 
 You can get a lot of interesting [models](https://huggingface.co/models?pipeline_tag=text-generation&sort=trending) at [Hugging Face](https://huggingface.co/). You can use git or write a tiny python script to download a model, see [Downloading models](https://huggingface.co/).
@@ -160,13 +160,13 @@ JBLOOMz uses JRE-based java.util.logging only. One might use a bridge to ones fa
 
 The [tokenizer](https://github.com/huggingface/tokenizers/) used by Hugging Face is written in [Rust](https://www.rust-lang.org/). As an example have a look at the [byte-level implementation](https://github.com/huggingface/tokenizers/blob/main/tokenizers/src/pre_tokenizers/byte_level.rs).
 
-### pickle-VM of python
+### Pickle-VM of Python
 
-Python uses a little virtual machine to serialize and deserialize python objects on disk. It's called pickle. The class PickleReader understands the opcodes used in the serialization of a BLOOM model.
+Python uses a little virtual machine to serialize and deserialize python objects on disk. It's called [pickle](https://github.com/python/cpython/blob/main/Lib/pickle.py). The class PickleReader understands the opcodes used in the serialization of a BLOOM model.
 
 ### 64-bit ZIPs
 
-The pickle file and the weights are store in a zip-archive. Most Java 8 JREs are not able to read 64-bit zip-archives! But Java 11, Java 17, ... can read those zip-archives. To run a model in Java 8 (I know that this is a rather old runtime) one can unpack the .bin-file:
+The pickle file and the weights are stored in a zip-archive. Most Java 8 JREs are not able to read 64-bit zip-archives! But Java 11, Java 17, ... can read those zip-archives. To run a model in Java 8 (I know that this is a rather old runtime) one can unpack the .bin-file:
 
     		final boolean supportUnzippedModel = true;
     		final ModelReader modelReader = new ModelReader(folder, supportUnzippedModel);

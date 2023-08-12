@@ -58,7 +58,7 @@ public class DemoVerboseMain {
 		//try (LlmExecutor executor = new LlmWorkerPoolBusySpin(nThreads)) {
 		//try (LlmExecutor executor = new LlmExecutorSingleThread()) {
 	
-			final int maxBatchSize = 3;
+			final int maxBatchSize = 1;
 			final BloomModel model = new BloomModel(modelReader, maxBatchSize, executor);
 	
 			tsStartInfer = Instant.now();
@@ -69,7 +69,7 @@ public class DemoVerboseMain {
 			//String inputSentence = "Translate to chinese: cat.";
 			//String inputSentence = "¿Quién era Joan Miró?";
 			int[][] inputIds = tokenizer.encode(inputSentence);
-			final int maxToken = 10;
+			final int maxToken = 7;
 			if (profiler != null) {
 				profiler.start();
 			}
