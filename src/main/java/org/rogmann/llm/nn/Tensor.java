@@ -380,13 +380,12 @@ public class Tensor {
 	 * @param beta beta-factor of input
 	 * @param output result to be computed (batchSize, numHeads, numSeq, numSeq)
 	 */
-	public void baddbmmView4(float[][][] fusedQkv, int numBlocks,
+	public void baddbmmView4(int numSeq, float[][][] fusedQkv, int numBlocks,
 			int numHeads, int headDim,
 			int idxBlock1, int idxBlock2,
 			float alpha, float beta, float[][][][] output) {
 		float[][][] input = t3;
 		final int batchSize = fusedQkv.length;
-		final int numSeq = fusedQkv[0].length;
 		if (LOG.isLoggable(Level.FINER)) {
 			LOG.finer("fusedQkv.length = " + fusedQkv.length + ", numHeads = " + numHeads);
 			LOG.finer("alpha = " + alpha + ", beta = " + beta);
@@ -455,9 +454,9 @@ public class Tensor {
 	 * @param output output tensor
 	 */
 	public static void add(float[][][] input1, float[][][] input2, float[][][] output) {
-		final int d1 = output.length;
-		final int d2 = output[0].length;
-		final int d3 = output[0][0].length;
+		final int d1 = Math.min(input1.length, input2.length);
+		final int d2 = Math.min(input1[0].length, input2[0].length);
+		final int d3 = Math.min(input1[0][0].length, input2[0][0].length);
 		for (int i = 0; i < d1; i++) {
 			float[][] m1 = input1[i];
 			float[][] m2 = input2[i];
