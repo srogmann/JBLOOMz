@@ -87,7 +87,7 @@ public class BloomAttention {
 		// valueLayer[b + i * headDim][j][k] = fusedQkv[b][j][(i * 3 + 2) * headDim + k]
 
 		float[][][][] multResult = new float[batchSize][numHeads][numSeq][numSeq];
-		alibi.baddbmmView4(fusedQkv, 3, numHeads, headDim, 0, 1,
+		alibi.baddbmmView4(numSeq, fusedQkv, 3, numHeads, headDim, 0, 1,
 				invNormFactor, beta, multResult);
 		if (LOG.isLoggable(Level.FINER) ) {
 			LOG.finer(String.format("multResult (%d, %d, %d, %d)",

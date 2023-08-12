@@ -161,9 +161,9 @@ public class BloomModel implements TensorProvider {
 		return tensor;
 	}
 
-	public float[][][] forward(int[][] inputIds) throws IOException {
+	public float[][][] forward(final int[][] inputIds) throws IOException {
 		final int batchSize = inputIds.length;
-		final int maxSeqLen = inputIds[0].length;
+		final int seqLen = inputIds[0].length;
 
 		float[][][] inputEmbeds = embeddings.wordEmbeddings(inputIds);
 		if (LOG.isLoggable(Level.FINE)) {
@@ -173,23 +173,22 @@ public class BloomModel implements TensorProvider {
 		}
 
 		// hidden states is a tensor of shape (batchSize, inputSize, hiddenSize).
-		float[][][] hiddenStates = new float[inputEmbeds.length][inputEmbeds[0].length][];
+		final float[][][] hiddenStates = new float[batchSize][inputIds[0].length][];
 		for (int idxI = 0; idxI < batchSize; idxI++) {
 			final int i = idxI;
-			executor.startLoopTasks(maxSeqLen, (jStart, jEnd) -> () -> {
-				for (int j = 0; j < maxSeqLen; j++) {
+			executor.startLoopTasks(seqLen, (jStart, jEnd) -> () -> {
+				for (int j = 0; j < seqLen; j++) {
 					hiddenStates[i][j] = wordEmbeddingsLayerNorm.normalize(inputEmbeds[i][j]);
 				}
 			});
 		}
-		final int hiddenSize = hiddenStates[0][0].length;
 		if (LOG.isLoggable(Level.FINER)) {
 			for (float[] row : hiddenStates[0]) {
 				LOG.finer("Hidden-Row: " + Arrays.toString(Arrays.copyOfRange(row, 0, 3)));
 			}
 		}
 		
-		final float[][] attentionMask = new float[1][maxSeqLen];
+		final float[][] attentionMask = new float[1][seqLen];
 		Arrays.fill(attentionMask[0], 1.0f);
 
 		final Tensor alibi = BloomAlibi.buildAlibiTensor(attentionMask, numHeads, executor);
@@ -199,24 +198,23 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 
-		boolean[][][][] causalMask = new boolean[batchSize][1][maxSeqLen][maxSeqLen];
+		boolean[][][][] causalMask = new boolean[batchSize][1][seqLen][seqLen];
 		for (boolean[][][] batchCM : causalMask) {
-			for (int i = 0; i < maxSeqLen; i++) {
-				for (int j = i + 1; j < maxSeqLen; j++) {
+			for (int i = 0; i < seqLen; i++) {
+				for (int j = i + 1; j < seqLen; j++) {
 					batchCM[0][i][j] = true;
 				}
 			}
 		}
 
-		final float[][][] fusedQkv = new float[batchSize][maxSeqLen][3 * hiddenSize];
-
+		final float[][][] fusedQkv = new float[batchSize][inputIds[0].length][3 * hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
 			blocks[layer].forward(inputEmbeds, hiddenStates, fusedQkv, causalMask, alibi, hiddenStates);
 		}
 
 		for (int i = 0; i < hiddenStates.length; i++) {
-			for (int j = 0; j < hiddenStates[i].length; j++) {
+			for (int j = 0; j < seqLen; j++) {
 				hiddenStates[i][j] = lnF.normalize(hiddenStates[i][j]);
 			}
 		}
