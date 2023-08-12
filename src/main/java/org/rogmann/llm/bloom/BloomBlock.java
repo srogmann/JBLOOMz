@@ -105,11 +105,13 @@ public class BloomBlock {
 	 * @param fusedQkv temporary tensor ([batchSize][numSeq][3 * dimHidden])
 	 * @param attentionMask
 	 * @param alibi ALiBi-tensor
+	 * @param attentionResidual attention residual
 	 * @param output output tensor (batchSize, numSeq, hiddenSize)
 	 */
 	public void forward(final float[][][] inputEmbeds, final float[][][] hiddenStates,
 			final float[][][] fusedQkv,
-			final boolean[][][][] attentionMask, final Tensor alibi, final float[][][] output) {
+			final boolean[][][][] attentionMask, final Tensor alibi, final float[][][] attentionResidual,
+			final float[][][] output) {
 		final int batchSize = inputEmbeds.length;
 		final int numSeq = inputEmbeds[0].length;
 		final float[][][] layernormOutput = new float[batchSize][numSeq][];
@@ -128,11 +130,10 @@ public class BloomBlock {
 		}
 
 		final int hiddenSize = hiddenStates[0][0].length;
-		final float[][][] outputs = new float[batchSize][numSeq][hiddenSize];
-		attention.forward(layernormOutput, fusedQkv, alibi, hiddenStates, attentionMask, outputs);
+		attention.forward(layernormOutput, fusedQkv, alibi, hiddenStates, attentionMask, attentionResidual);
 		if (LOG.isLoggable(Level.FINER)) {
 			for (int h = 0; h < 3; h++) {
-				LOG.finer("attention.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(outputs[0][h], 0, 3)));
+				LOG.finer("attention.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(attentionResidual[0][h], 0, 3)));
 			}
 		}
 
@@ -140,7 +141,7 @@ public class BloomBlock {
 			final int i = idxI;
 			executor.startLoopTasks(numSeq, (jStart, jEnd) -> () -> {
 				for (int j = jStart; j < jEnd; j++) {
-					layernormOutput[i][j] = postAttentionLayerNorm.normalize(outputs[i][j]);
+					layernormOutput[i][j] = postAttentionLayerNorm.normalize(attentionResidual[i][j]);
 				}
 			});
 		}
@@ -150,7 +151,7 @@ public class BloomBlock {
 			}
 		}
 
-		mlp.forward(layernormOutput, outputs, output);
+		mlp.forward(layernormOutput, attentionResidual, output);
 		if (LOG.isLoggable(Level.FINE)) {
 			for (int h = 0; h < 3; h++) {
 				LOG.fine("mlp.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(output[0][h], 0, 3)));

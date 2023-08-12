@@ -207,10 +207,12 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 
-		final float[][][] fusedQkv = new float[batchSize][inputIds[0].length][3 * hiddenSize];
+		final int numSeq = inputIds[0].length;
+		final float[][][] fusedQkv = new float[batchSize][numSeq][3 * hiddenSize];
+		final float[][][] attentionResidual = new float[batchSize][numSeq][hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
-			blocks[layer].forward(inputEmbeds, hiddenStates, fusedQkv, causalMask, alibi, hiddenStates);
+			blocks[layer].forward(inputEmbeds, hiddenStates, fusedQkv, causalMask, alibi, attentionResidual, hiddenStates);
 		}
 
 		for (int i = 0; i < hiddenStates.length; i++) {
