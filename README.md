@@ -12,6 +12,25 @@ For example you can download the model [bloom/bloomz-560m](https://huggingface.c
     Prompt: ¿Quién era Joan Miró?
     Result: pintor español</s>El artista plástico catalán Joan Miró, conocido como el artista catalán
 
+Sample code (see src/test/java):
+
+    		final File folder = new File(args[0]);
+    		final Tokenizer tokenizer = new BPETokenizer(folder);
+    		
+    		final ModelReader modelReader = new ModelReader(folder, true);
+    		final int nThreads = 8;
+    
+    		try (LlmExecutor executor = new LlmWorkerPoolPhaser(nThreads)) {
+    			final BloomModel model = new BloomModel(modelReader, 1, executor);
+	    
+    			String inputSentence = "Translate to Chinese: I write a program in Java.";
+    			final int maxToken = 10;
+    			final List<String> listToken = model.computeNextTokens(tokenizer, model, inputSentence, maxToken);
+    			System.out.println("Prompt: " + inputSentence);
+    			final String sResult = listToken.stream().collect(Collectors.joining());
+    			System.out.println("Result:" + sResult);
+    		}
+
 It is interesting to watch the execution of matrix operations resulting in natural language.
 
     #tokens: 250680
@@ -134,6 +153,23 @@ On a Linux system you may install git-lfs to download a model:
 ## Logging
 
 JBLOOMz uses JRE-based java.util.logging only. One might use a bridge to ones favorite log-implementation.
+
+## Further observations
+
+### Rust ###
+
+The [tokenizer](https://github.com/huggingface/tokenizers/) used by Hugging Face is written in [Rust](https://www.rust-lang.org/). As an example have a look at the [byte-level implementation](https://github.com/huggingface/tokenizers/blob/main/tokenizers/src/pre_tokenizers/byte_level.rs).
+
+### pickle-VM of python
+
+Python uses a little virtual machine to serialize and deserialize python objects on disk. It's called pickle. The class PickleReader understands the opcodes used in the serialization of a BLOOM model.
+
+### 64-bit ZIPs
+
+The pickle file and the weights are store in a zip-archive. Most Java 8 JREs are not able to read 64-bit zip-archives! But Java 11, Java 17, ... can read those zip-archives. To run a model in Java 8 (I know that this is a rather old runtime) one can unpack the .bin-file:
+
+    		final boolean supportUnzippedModel = true;
+    		final ModelReader modelReader = new ModelReader(folder, supportUnzippedModel);
 
 ## Support
 
