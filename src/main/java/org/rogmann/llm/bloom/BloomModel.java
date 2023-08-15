@@ -190,8 +190,10 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 		
-		final float[][] attentionMask = new float[1][seqLen];
-		Arrays.fill(attentionMask[0], 1.0f);
+		final float[][] attentionMask = new float[batchSize][seqLen];
+		for (int i = 0; i < batchSize; i++) {
+			Arrays.fill(attentionMask[0], 1.0f);
+		}
 
 		final Tensor alibi = BloomAlibi.buildAlibiTensor(attentionMask, numHeads, executor);
 		if (LOG.isLoggable(Level.FINER)) {
