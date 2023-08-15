@@ -78,6 +78,10 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 		LOGGER.finer("Wait for loop-tasks");
 		phaserFinished.arriveAndAwaitAdvance();
 		LOGGER.finer("End of Tasks");
+		final Throwable eCause = refECause.get();
+		if (eCause != null) {
+			throw new RuntimeException("Exception while executing loop-runnable", eCause);
+		}
 	}
 
 	@Override
