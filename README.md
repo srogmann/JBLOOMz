@@ -1,6 +1,7 @@
 # JBLOOMz
 
-The original idea for JBLOOMz was to consider the possibility of running a large language model in a pure Java environment without python and the need of consuming REST APIs. It was clear that this approach would not be as fast and as comprehensive as pytorch, or more precisely, [🤗 Transformers](https://huggingface.co/docs/transformers/index). I you want to play with a fast and versatile framework use the python- and rust-based 🤗 Transformers.
+JBLOOMz is a interpreter of BLOOM based language models.
+The original idea for JBLOOMz was to consider the possibility of running a large language model in a pure Java environment without python and the need of consuming REST APIs. It was clear that this approach would not be as fast and as comprehensive as pytorch, or more precisely, [🤗 Transformers](https://huggingface.co/docs/transformers/index). I you want to play with a fast and versatile framework use the python- and rust-based 🤗 Transformers or have a look at <https://github.com/deeplearning4j/deeplearning4j>.
 
 JBLOOMz (Java-BLOOMz) is a small (<5000 loc) Java implementation of the tokenizer and model used by the multilingual language model [BLOOM](https://huggingface.co/bigscience/bloom).
 
@@ -11,6 +12,8 @@ For example you can download the model [bloom/bloomz-560m](https://huggingface.c
 
     Prompt: ¿Quién era Joan Miró?
     Result: pintor español</s>El artista plástico catalán Joan Miró, conocido como el artista catalán
+
+The spanish sentence is cut off because I limited the number of tokens to be generated.
 
 Sample code (see src/test/java):
 
