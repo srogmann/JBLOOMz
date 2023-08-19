@@ -263,8 +263,8 @@ public class BloomModel implements TensorProvider {
 					// We collect the tokens of the first batch-element only.
 					listToken.add(sToken);
 				}
+				inputIds[batch] = tokenizer.appendToken(inputIds[batch], idx);
 			}		
-			inputIds = tokenizer.appendToken(inputIds, aIdx);
 		}
 		return listToken;
 	}

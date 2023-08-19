@@ -25,12 +25,12 @@ public interface Tokenizer {
 	String decode(int idx);
 
 	/**
-	 * Appends a token to a given array of input-ids.
-	 * @param inputIds input-ids
+	 * Appends a token to a given array of tokens.
+	 * @param inputIds tokens
 	 * @param idx token to be added
-	 * @return new input-ids
+	 * @return new tokens
 	 */
-	int[][] appendToken(int[][] inputIds, int idx);
+	int[] appendToken(int[] is, int idx);
 
 	/**
 	 * Convert token into internal representation (e.g. byte-level).

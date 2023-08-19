@@ -69,12 +69,12 @@ public class Embeddings {
 
 	/**
 	 * Compute the token with maximum probability in the last state of the hidden state.
-	 * @param hiddenState hidden state
+	 * @param hiddenState batch-element of hidden state
 	 * @param tokenizer tokenizer (used for logging only)
 	 * @return index of next token
 	 */
-	public int computeMaxToken(float[][][] hiddenState, Tokenizer tokenizer) {
-		final float[] lastState = hiddenState[0][hiddenState[0].length - 1];
+	public int computeMaxToken(float[][] batchState, Tokenizer tokenizer) {
+		final float[] lastState = batchState[batchState.length - 1];
 		final float[] lastEmbedding = computeLastEmbedding(lastState);
 		int idx = 0;
 		float max = -1e10f;

@@ -58,22 +58,25 @@ public class DemoVerboseMain {
 		//try (LlmExecutor executor = new LlmWorkerPoolBusySpin(nThreads)) {
 		//try (LlmExecutor executor = new LlmExecutorSingleThread()) {
 	
-			final int maxBatchSize = 1;
+			final int maxBatchSize = 3;
 			final BloomModel model = new BloomModel(modelReader, maxBatchSize, executor);
 	
 			tsStartInfer = Instant.now();
 			//String inputSentence = "Auf der Wiese läuft ein Hund hinter";
-			//String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
-			String inputSentence = "Translate to Chinese: I write a program in Java.";
+			String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
+			//String inputSentence = "Translate to Chinese: I write a program in Java.";
 			//String inputSentence = "What is the capital of France?";
 			//String inputSentence = "Translate to chinese: cat.";
 			//String inputSentence = "¿Quién era Joan Miró?";
+			//String inputSentence = "Auf der Wiese steht eine Kuh unter ";
 			int[][] inputIds = tokenizer.encode(inputSentence);
-			final int maxToken = 7;
+			final int maxToken = 10;
+			final int numBeams = maxBatchSize;
 			if (profiler != null) {
 				profiler.start();
 			}
-			final List<String> listToken = new ArrayList<>();
+			final List<List<String>> listBatchesToken = new ArrayList<>();
+			listBatchesToken.add(new ArrayList<>());
 			for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
 				System.out.println("");
 				System.out.println("Inference " + idxInf);
@@ -82,35 +85,63 @@ public class DemoVerboseMain {
 				
 				float[][][] hiddenState = model.forward(inputIds);
 
-				final float[] lastState = hiddenState[0][hiddenState[0].length - 1];
-				if (LOG.isLoggable(Level.FINE)) {
-					LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));
-					LOG.fine("     [...]  " + Arrays.toString(Arrays.copyOfRange(lastState, lastState.length - 3, lastState.length)));
-					LOG.fine("Tok.size: " + tokenizer.size());
-					LOG.fine("lastState.len: " + lastState.length);
+				int batchSize = hiddenState.length;
+				final List<Integer> idxCandidates = new ArrayList<>();
+				int[][] nextInputIds = new int[batchSize][];
+				for (int batch = 0; batch < batchSize; batch++) {
+					System.out.println("Batch " + batch);
+					final float[][] batchState = hiddenState[batch];
+					final float[] lastState = batchState[batchState.length - 1];
+					if (LOG.isLoggable(Level.FINE)) {
+						LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));
+						LOG.fine("     [...]  " + Arrays.toString(Arrays.copyOfRange(lastState, lastState.length - 3, lastState.length)));
+						LOG.fine("Tok.size: " + tokenizer.size());
+						LOG.fine("lastState.len: " + lastState.length);
+					}
+					final float[] lastEmbedding = model.getEmbeddings().computeLastEmbedding(lastState);
+					int idx = 0;
+					float max = -1e10f;
+					idxCandidates.clear();
+					for (int i = 0; i < lastEmbedding.length; i++) {
+						if (lastEmbedding[i] > max) {
+							max = lastEmbedding[i];
+							idx = i;
+							String token = tokenizer.decode(i);
+							System.out.println(String.format(" idx=%d, max=%f, token=%s (%s)",
+									idx, max, token, tokenizer.convertToInternal(token)));
+							idxCandidates.add(Integer.valueOf(idx));
+						}
+					}
+					String sToken = tokenizer.decode(idx);
+					System.out.println(" End: " + LocalDateTime.now());
+					System.out.println(" Token: " + sToken);
+					final List<String> listToken = listBatchesToken.get(batch);
+					listToken.add(sToken);
+					nextInputIds[batch] = tokenizer.appendToken(inputIds[batch], idx);
 				}
-				final float[] lastEmbedding = model.getEmbeddings().computeLastEmbedding(lastState);
-				int idx = 0;
-				float max = -1e10f;
-				for (int i = 0; i < lastEmbedding.length; i++) {
-					if (lastEmbedding[i] > max) {
-						max = lastEmbedding[i];
-						idx = i;
-						String token = tokenizer.decode(i);
-						System.out.println(String.format("idx=%d, max=%f, token=%s (%s)",
-								idx, max, token, tokenizer.convertToInternal(token)));
+
+				final int numCandidates = idxCandidates.size();
+				if (idxInf == 2 && numCandidates >= numBeams) {
+					inputIds = new int[numBeams][];
+					inputIds[0] = nextInputIds[0];
+					for (int j = 1; j < numBeams; j++) {
+						inputIds[j] = nextInputIds[0].clone();
+						final int idx = idxCandidates.get(numCandidates - 1 - j).intValue();
+						inputIds[j][inputIds[j].length - 1] = idx;
+						final List<String> listToken = new ArrayList<>(listBatchesToken.get(0));
+						listToken.set(listToken.size() - 1, tokenizer.decode(idx));
+						listBatchesToken.add(listToken);
 					}
 				}
-				String sToken = tokenizer.decode(idx);
-				System.out.println("End: " + LocalDateTime.now());
-				System.out.println("Token: " + sToken);
-				listToken.add(sToken);
-				
-				inputIds = tokenizer.appendToken(inputIds, idx);
+				else {
+					inputIds = nextInputIds;
+				}
 			}
 			System.out.println("Prompt: " + inputSentence);
-			final String sResult = listToken.stream().collect(Collectors.joining());
-			System.out.println("Result:" + sResult);
+			for(int batch = 0; batch < listBatchesToken.size(); batch++) {
+				final String sResult = listBatchesToken.get(batch).stream().collect(Collectors.joining());
+				System.out.println("Result " + batch + ":" + sResult);
+			}
 		}
 		
 		final Instant tsEnd = Instant.now();

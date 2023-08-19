@@ -183,11 +183,10 @@ public class BPETokenizer implements Tokenizer {
 
 	/** {@inheritDoc} */
 	@Override
-	public int[][] appendToken(int[][] inputIds, int idx) {
-		final int[][] inputIdsNext = new int[1][inputIds[0].length + 1];
-		System.arraycopy(inputIds[0], 0, inputIdsNext[0], 0, inputIds[0].length);
-		inputIdsNext[0][inputIds[0].length] = idx;
-		return inputIdsNext;
+	public int[] appendToken(int[] tokens, int idx) {
+		final int[] tokensNext = Arrays.copyOfRange(tokens, 0, tokens.length + 1);
+		tokensNext[tokens.length] = idx;
+		return tokensNext;
 	}
 
 	/** {@inheritDoc} */
