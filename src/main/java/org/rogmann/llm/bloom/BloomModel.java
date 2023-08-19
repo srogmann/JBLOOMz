@@ -163,6 +163,11 @@ public class BloomModel implements TensorProvider {
 		return tensor;
 	}
 
+	/**
+	 * Executes the model.
+	 * @param inputIds input-ids (batchSize, numSeq)
+	 * @return hidden states (batchSize, seqLen, dim of weights)
+	 */
 	public float[][][] forward(final int[][] inputIds) {
 		final int batchSize = inputIds.length;
 		final int seqLen = inputIds[0].length;
@@ -245,15 +250,21 @@ public class BloomModel implements TensorProvider {
 		int[][] inputIds = tokenizer.encode(inputSentence);
 		final List<String> listToken = new ArrayList<>();
 		for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
-			LOG.info("Inference " + idxInf);
-			
+			final int[] aIdx = new int[inputIds.length];
 			final float[][][] hiddenState = forward(inputIds);
-			final int idx = model.getEmbeddings().computeMaxToken(hiddenState, tokenizer);
-			final String sToken = tokenizer.decode(idx);
-			LOG.info("Token: " + sToken);
-			listToken.add(sToken);
-			
-			inputIds = tokenizer.appendToken(inputIds, idx);
+			for (int batch = 0; batch < inputIds.length; batch++) {
+				LOG.info("Batch " + batch + ", Inference " + idxInf);
+				final float[][] batchState = hiddenState[batch];
+				final int idx = model.getEmbeddings().computeMaxToken(batchState, tokenizer);
+				final String sToken = tokenizer.decode(idx);
+				aIdx[batch] = idx;
+				LOG.info("Token: " + sToken);
+				if (batch == 0) {
+					// We collect the tokens of the first batch-element only.
+					listToken.add(sToken);
+				}
+			}		
+			inputIds = tokenizer.appendToken(inputIds, aIdx);
 		}
 		return listToken;
 	}
