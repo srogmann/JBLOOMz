@@ -22,6 +22,9 @@ public class BloomAttention {
 
 	private final float invNormFactor;
 	private final float beta;
+	/**
+	 * dim1 = 3 * hiddenSize, dim2 = hiddenSize.
+	 * hiddenSize -&gt; 3 * hiddenSize: matrix used to build query, key and value. */
 	private final Linear queryKeyValue;
 	private final Linear dense;
 
@@ -54,16 +57,20 @@ public class BloomAttention {
 	
 	/**
 	 * Computes an attention.
+	 * 
+	 * <p>
 	 * @param hiddenStates input-tensor (batchSize, numSeq, hiddenSize)
 	 * @param fusedQkv temporary tensor ([batchSize][numSeq][3 * dimHidden])
+	 * @param numSeqLenCache <code>null</code> if no cache is used, numSeq in fusedQkv otherwise
 	 * @param alibi ALiBi-tensor of shape executor(batchSize * numHeads, 1, numSeq)
 	 * @param residual residual-tensor (batchSize, numSeq, hiddenSize)
 	 * @param attentionMask attention-mask (batchSize, 1, maxSeqLen, maxSeqLen)
 	 * @param output output-tensor (batchSize, seqLength, numHeads * headDim)
 	 */
-	public void forward(float[][][] hiddenStates, final float[][][] fusedQkv,
-			Tensor alibi,
-			float[][][] residual, boolean[][][][] attentionMask,
+	public void forward(float[][][] hiddenStates,
+			final float[][][] fusedQkv, final Integer numSeqLenCache,
+			final Tensor alibi,
+			final float[][][] residual, final boolean[][][][] attentionMask,
 			final float[][][] output) {
 		final int batchSize = hiddenStates.length;
 		final int numSeq = hiddenStates[0].length;

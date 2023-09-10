@@ -103,13 +103,14 @@ public class BloomBlock {
 	 * @param inputEmbeds input embeddings
 	 * @param hiddenStates tensor (batchSize, numSeq, hiddenSize)
 	 * @param fusedQkv temporary tensor ([batchSize][numSeq][3 * dimHidden])
+	 * @param numSeqLenCache <code>null</code> if no cache is used, numSeq in fusedQkv otherwise
 	 * @param attentionMask attention mask
 	 * @param alibi ALiBi-tensor
 	 * @param attentionResidual attention residual
 	 * @param output output tensor (batchSize, numSeq, hiddenSize)
 	 */
 	public void forward(final float[][][] inputEmbeds, final float[][][] hiddenStates,
-			final float[][][] fusedQkv,
+			final float[][][] fusedQkv, final Integer numSeqLenCache,
 			final boolean[][][][] attentionMask, final Tensor alibi, final float[][][] attentionResidual,
 			final float[][][] output) {
 		final int batchSize = inputEmbeds.length;
@@ -129,7 +130,7 @@ public class BloomBlock {
 			}
 		}
 
-		attention.forward(layernormOutput, fusedQkv, alibi, hiddenStates, attentionMask, attentionResidual);
+		attention.forward(layernormOutput, fusedQkv, numSeqLenCache, alibi, hiddenStates, attentionMask, attentionResidual);
 		if (LOG.isLoggable(Level.FINER)) {
 			for (int h = 0; h < 3; h++) {
 				LOG.finer("attention.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(attentionResidual[0][h], 0, 3)));

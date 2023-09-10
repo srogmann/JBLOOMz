@@ -64,14 +64,16 @@ public class DemoVerboseMain {
 	
 			tsStartInfer = Instant.now();
 			//String inputSentence = "Auf der Wiese läuft ein Hund hinter";
-			//String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
-			String inputSentence = "Translate to Chinese: I write a program in Java.";
+			String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
+			//String inputSentence = "Translate to Chinese: I write a program in Java.";
 			//String inputSentence = "What is the capital of France?";
 			//String inputSentence = "Translate to chinese: cat.";
 			//String inputSentence = "¿Quién era Joan Miró?";
 			//String inputSentence = "Auf der Wiese steht eine Kuh unter ";
-			int[][] inputIds = tokenizer.encode(inputSentence);
+			//String inputSentence = "Was macht der Prozess FIEBER_MESSEN? ";
+			//String inputSentence = "In Kleve ";
 			final int maxToken = 10;
+			int[][] inputIds = tokenizer.encode(inputSentence);
 			final int numBeams = maxBatchSize;
 			if (profiler != null) {
 				profiler.start();
@@ -83,10 +85,14 @@ public class DemoVerboseMain {
 				System.out.println("Inference " + idxInf);
 				System.out.println("input_ids: " + Arrays.toString(inputIds[0]));
 				System.out.println("Start: " + LocalDateTime.now());
-				
-				float[][][] hiddenState = model.forward(inputIds);
 
-				int batchSize = hiddenState.length;
+				final int batchSize = inputIds.length;
+				final int numSeq = inputIds[0].length;
+				final int hiddenSize = model.getHiddenSize();
+				final float[][][][] layersFusedQkv = new float[model.getNumLayers()][batchSize][numSeq][3 * hiddenSize];
+				final Integer numSeqLenCache = null;
+				float[][][] hiddenState = model.forward(inputIds, layersFusedQkv, numSeqLenCache);
+
 				final List<Integer> idxCandidates = new ArrayList<>();
 				int[][] nextInputIds = new int[batchSize][];
 				for (int batch = 0; batch < batchSize; batch++) {
