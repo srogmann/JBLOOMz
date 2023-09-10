@@ -132,7 +132,7 @@ public class BloomBlock {
 
 		attention.forward(layernormOutput, fusedQkv, numSeqLenCache, alibi, hiddenStates, attentionMask, attentionResidual);
 		if (LOG.isLoggable(Level.FINER)) {
-			for (int h = 0; h < 3; h++) {
+			for (int h = 0; h < 3 && h < attentionResidual[0].length; h++) {
 				LOG.finer("attention.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(attentionResidual[0][h], 0, 3)));
 			}
 		}
@@ -153,7 +153,7 @@ public class BloomBlock {
 
 		mlp.forward(layernormOutput, attentionResidual, output);
 		if (LOG.isLoggable(Level.FINE)) {
-			for (int h = 0; h < 3; h++) {
+			for (int h = 0; h < 3 && h < output[0].length; h++) {
 				LOG.fine("mlp.out " + h + ": " + Arrays.toString(Arrays.copyOfRange(output[0][h], 0, 3)));
 			}
 		}
