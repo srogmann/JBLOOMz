@@ -74,12 +74,15 @@ public class DemoVerboseMain {
 			//String inputSentence = "In Kleve ";
 			final int maxToken = 10;
 			int[][] inputIds = tokenizer.encode(inputSentence);
+			final int numTokenInput = inputIds[0].length;
 			final int numBeams = maxBatchSize;
 			if (profiler != null) {
 				profiler.start();
 			}
 			final List<List<String>> listBatchesToken = new ArrayList<>();
 			listBatchesToken.add(new ArrayList<>());
+			final float[][][][] layersFusedQkv = new float[model.getNumLayers()][maxBatchSize]
+					[numTokenInput + maxToken][3 * model.getHiddenSize()];
 			for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
 				System.out.println("");
 				System.out.println("Inference " + idxInf);
@@ -89,7 +92,6 @@ public class DemoVerboseMain {
 				final int batchSize = inputIds.length;
 				final int numSeq = inputIds[0].length;
 				final int hiddenSize = model.getHiddenSize();
-				final float[][][][] layersFusedQkv = new float[model.getNumLayers()][batchSize][numSeq][3 * hiddenSize];
 				final Integer numSeqLenCache = null;
 				float[][][] hiddenState = model.forward(inputIds, layersFusedQkv, numSeqLenCache);
 

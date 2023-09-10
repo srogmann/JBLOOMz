@@ -146,7 +146,7 @@ public class BloomAttention {
 		//
 		//float[][][][] multResult = new float[batchSize][numHeads][numSeq][numSeq];
 		final float[][][] contextLayer = new float[batchSize][numSeq][numHeads * headDim];
-		Tensor.bmmView4(multResult, fusedQkv, 3, numHeads, headDim, 2, contextLayer, executor);
+		Tensor.bmmView4(multResult, fusedQkv, numSeq, 3, numHeads, headDim, 2, contextLayer, executor);
 
 		if (LOG.isLoggable(Level.FINER) ) {
 			LOG.finer("after bmmView4");

@@ -418,6 +418,7 @@ public class Tensor {
 	 * Executes a batch matrix product.
 	 * @param multResult batch of left matrix, shape (batchSize, numHeads, numSeq, numSeq)
 	 * @param fusedQkv tensor containing right matrix in one of its blocks
+	 * @param numSeq number of sequence-entries in fusedQkv to be used (number of tokens)
 	 * @param numBlocks number of blocks in fusedQkv
 	 * @param numHeads number of heads
 	 * @param headDim dimension of a head
@@ -425,10 +426,10 @@ public class Tensor {
 	 * @param contextLayer tensor to be filled, shape (batch_size, seq_length, num_heads * head_dim)
 	 * @param executor executor
 	 */
-	public static void bmmView4(float[][][][] multResult, float[][][] fusedQkv, int numBlocks, int numHeads, int headDim, int idxBlock2,
+	public static void bmmView4(float[][][][] multResult, float[][][] fusedQkv, int numSeq,
+			int numBlocks, int numHeads, int headDim, int idxBlock2,
 			float[][][] contextLayer, LlmExecutor executor) {
 		final int batchSize = fusedQkv.length;
-		final int numSeq = fusedQkv[0].length;
 		for (int idxB = 0; idxB < batchSize; idxB++) {
 			final int b = idxB;
 			executor.startLoopTasks(numHeads, (hStart, hEnd) -> () -> {
