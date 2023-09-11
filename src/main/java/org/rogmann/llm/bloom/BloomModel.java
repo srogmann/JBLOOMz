@@ -206,6 +206,8 @@ public class BloomModel implements TensorProvider {
 			final float[][][][] layersFusedQkv, final Integer numSeqLenCache) {
 		final int batchSize = inputIds.length;
 		final int seqLen = inputIds[0].length;
+		//final int totalSeqLen = (numSeqLenCache == null) ? seqLen : numSeqLenCache + seqLen;
+		final int totalSeqLen = seqLen;
 
 		float[][][] inputEmbeds = embeddings.wordEmbeddings(inputIds);
 		if (LOG.isLoggable(Level.FINE)) {
@@ -230,7 +232,7 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 		
-		final float[][] attentionMask = new float[batchSize][seqLen];
+		final float[][] attentionMask = new float[batchSize][totalSeqLen];
 		for (int i = 0; i < batchSize; i++) {
 			Arrays.fill(attentionMask[0], 1.0f);
 		}
@@ -242,17 +244,16 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 
-		boolean[][][][] causalMask = new boolean[batchSize][1][seqLen][seqLen];
+		boolean[][][][] causalMask = new boolean[batchSize][1][totalSeqLen][totalSeqLen];
 		for (boolean[][][] batchCM : causalMask) {
-			for (int i = 0; i < seqLen; i++) {
-				for (int j = i + 1; j < seqLen; j++) {
+			for (int i = 0; i < totalSeqLen; i++) {
+				for (int j = i + 1; j < totalSeqLen; j++) {
 					batchCM[0][i][j] = true;
 				}
 			}
 		}
 
-		final int numSeq = inputIds[0].length;
-		final float[][][] attentionResidual = new float[batchSize][numSeq][hiddenSize];
+		final float[][][] attentionResidual = new float[batchSize][totalSeqLen][hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
 			blocks[layer].forward(inputEmbeds, hiddenStates,

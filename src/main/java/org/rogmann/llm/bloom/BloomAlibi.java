@@ -25,7 +25,6 @@ public class BloomAlibi {
 	public static Tensor buildAlibiTensor(final float[][] attentionMask,
 			int numHeads, LlmExecutor executor) {
 		final int batchSize = attentionMask.length;
-		final int maxSeqLen = attentionMask[0].length;
 		int closestPowerOf2 = 1;
 		while (true) {
 			int next = closestPowerOf2 * 2;
@@ -61,6 +60,7 @@ public class BloomAlibi {
 			LOG.fine("base = " + Arrays.toString(slopes));
 		}
 		
+		final int maxSeqLen = attentionMask[0].length;
 		final float[][] arange = new float[batchSize][maxSeqLen];
 		for (int i = 0; i < batchSize; i++) {
 			float sum = 0;

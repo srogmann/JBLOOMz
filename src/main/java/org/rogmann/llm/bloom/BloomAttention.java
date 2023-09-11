@@ -74,7 +74,17 @@ public class BloomAttention {
 			final float[][][] output) {
 		final int batchSize = hiddenStates.length;
 		final int numSeq = hiddenStates[0].length;
-		queryKeyValue.mult(hiddenStates, fusedQkv);
+		if (numSeqLenCache == null) {
+			queryKeyValue.mult(hiddenStates, fusedQkv);
+		}
+		else {
+			// numSeqLenCache token-rows haven been processed already.
+			final int numSeqComputed = numSeqLenCache.intValue();
+			if (LOG.isLoggable(Level.FINER)) {
+				LOG.finer(String.format("forward: numSeqComputed=%d", Integer.valueOf(numSeqComputed)));
+			}
+			queryKeyValue.multMinDim2(hiddenStates, fusedQkv, numSeqComputed);
+		}
 		if (LOG.isLoggable(Level.FINER) ) {
 			LOG.finer(String.format("qKV (%d, %d, %d)", fusedQkv.length, fusedQkv[0].length, fusedQkv[0][0].length));
 			for(float[] row : fusedQkv[0]) {

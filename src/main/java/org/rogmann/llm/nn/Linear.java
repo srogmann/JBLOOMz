@@ -70,4 +70,34 @@ public class Linear {
 		}
 	}
 
+	/**
+	 * Computes input * transposed(mat) + bias.
+	 * This method can be used when a part of the result has already been computed.
+	 * @param input input
+	 * @param output result
+	 * @param minDim2 start-offset in the second dimension
+	 */
+	public void multMinDim2(float[][][] input, final float[][][] output, final int minDim2) {
+		final int dimBatch = input.length;
+		final int d = input[0].length;
+		if (input[0][0].length != dim2 || d > output[0].length || output[0][0].length != dim1) {
+			throw new IllegalArgumentException(String.format("mult: dimension mismatch, input (%d, %d, %d), mat (%d, %d), output(%d, %d, %d)",
+					input.length, input[0].length, input[0][0].length,
+					mat.length, mat[0].length,
+					output.length, output[0].length, output[0][0].length));
+		}
+		for (int idxB = 0; idxB < dimBatch; idxB++) {
+			final int b = idxB;
+			for (int i = minDim2; i < d; i++) {
+				for (int j = 0; j < dim1; j++) {
+					float sum = bias[j];
+					for (int k = 0; k < dim2; k++) {
+						sum += input[b][i][k] * mat[j][k];
+					}
+					output[b][i][j] = sum;
+				}
+			}
+		}
+	}
+
 }

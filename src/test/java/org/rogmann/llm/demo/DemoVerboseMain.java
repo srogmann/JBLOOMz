@@ -90,13 +90,11 @@ public class DemoVerboseMain {
 				System.out.println("Start: " + LocalDateTime.now());
 
 				final int batchSize = inputIds.length;
-				final int numSeq = inputIds[0].length;
-				final int hiddenSize = model.getHiddenSize();
-				final Integer numSeqLenCache = null;
-				float[][][] hiddenState = model.forward(inputIds, layersFusedQkv, numSeqLenCache);
+				final Integer numSeqLenCache = (idxInf == 1) ? null : Integer.valueOf(numTokenInput + idxInf - 2);
+				final float[][][] hiddenState = model.forward(inputIds, layersFusedQkv, numSeqLenCache);
 
 				final List<Integer> idxCandidates = new ArrayList<>();
-				int[][] nextInputIds = new int[batchSize][];
+				final int[][] nextInputIds = new int[batchSize][];
 				for (int batch = 0; batch < batchSize; batch++) {
 					System.out.println("Batch " + batch);
 					final float[][] batchState = hiddenState[batch];
