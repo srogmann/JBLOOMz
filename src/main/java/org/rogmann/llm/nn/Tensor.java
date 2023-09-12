@@ -387,7 +387,7 @@ public class Tensor {
 			int idxBlock1, int idxBlock2,
 			float alpha, float beta, float[][][][] output) {
 		float[][][] input = t3;
-		final int batchSize = fusedQkv.length;
+		final int batchSize = output.length;
 		if (LOG.isLoggable(Level.FINER)) {
 			LOG.finer("fusedQkv.length = " + fusedQkv.length + ", numHeads = " + numHeads);
 			LOG.finer("alpha = " + alpha + ", beta = " + beta);
@@ -405,7 +405,12 @@ public class Tensor {
 										* fusedQkv[b][j][(h * 3 + idxBlock2) * headDim + k];
 							}
 							sum *= alpha;
-							sum += beta * input[b * numHeads + h][0][j];
+							try {
+								sum += beta * input[b * numHeads + h][0][j];
+							} catch (ArrayIndexOutOfBoundsException e) {
+								throw new RuntimeException(String.format("AIOOBE: batchSize=%d, b=%d, numHeads=%d, h=%d, j=%d, input.length=%d",
+										batchSize, b, numHeads, h, j, input.length), e);
+							}
 							output[b][h][i][j] = sum;
 						}
 					}
@@ -429,7 +434,7 @@ public class Tensor {
 	public static void bmmView4(float[][][][] multResult, float[][][] fusedQkv, int numSeq,
 			int numBlocks, int numHeads, int headDim, int idxBlock2,
 			float[][][] contextLayer, LlmExecutor executor) {
-		final int batchSize = fusedQkv.length;
+		final int batchSize = multResult.length;
 		for (int idxB = 0; idxB < batchSize; idxB++) {
 			final int b = idxB;
 			executor.startLoopTasks(numHeads, (hStart, hEnd) -> () -> {

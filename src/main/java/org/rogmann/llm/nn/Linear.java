@@ -75,9 +75,9 @@ public class Linear {
 	 * This method can be used when a part of the result has already been computed.
 	 * @param input input
 	 * @param output result
-	 * @param minDim2 start-offset in the second dimension
+	 * @param startOffsetOutputDim2 start-offset in the second dimension in the output-tensor
 	 */
-	public void multMinDim2(float[][][] input, final float[][][] output, final int minDim2) {
+	public void multMinDim2(float[][][] input, final float[][][] output, final int startOffsetOutputDim2) {
 		final int dimBatch = input.length;
 		final int d = input[0].length;
 		if (input[0][0].length != dim2 || d > output[0].length || output[0][0].length != dim1) {
@@ -88,13 +88,13 @@ public class Linear {
 		}
 		for (int idxB = 0; idxB < dimBatch; idxB++) {
 			final int b = idxB;
-			for (int i = minDim2; i < d; i++) {
+			for (int i = 0; i < d; i++) {
 				for (int j = 0; j < dim1; j++) {
 					float sum = bias[j];
 					for (int k = 0; k < dim2; k++) {
 						sum += input[b][i][k] * mat[j][k];
 					}
-					output[b][i][j] = sum;
+					output[b][startOffsetOutputDim2 + i][j] = sum;
 				}
 			}
 		}

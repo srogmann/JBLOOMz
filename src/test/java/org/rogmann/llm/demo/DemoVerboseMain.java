@@ -86,18 +86,33 @@ public class DemoVerboseMain {
 			for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
 				System.out.println("");
 				System.out.println("Inference " + idxInf);
-				System.out.println("input_ids: " + Arrays.toString(inputIds[0]));
+				final int batchSize = inputIds.length;
+				for (int b = 0; b < batchSize; b++) {
+					System.out.println(String.format("input_ids[%d]: %s", b, Arrays.toString(inputIds[b])));
+				}
 				System.out.println("Start: " + LocalDateTime.now());
 
-				final int batchSize = inputIds.length;
-				final Integer numSeqLenCache = (idxInf == 1) ? null : Integer.valueOf(numTokenInput + idxInf - 2);
-				final float[][][] hiddenState = model.forward(inputIds, layersFusedQkv, numSeqLenCache);
+				final float[][][] hiddenState;
+				if (idxInf == 1) {
+					// First iteration, computes the fusedQkv-entries of the input-tokens.
+					hiddenState = model.forward(inputIds, layersFusedQkv, null);
+				}
+				else {
+					// Next iteration, re-use of existing fusedQkv-entries.
+					final int curNumSeqIdx = numTokenInput + idxInf - 1;
+					final Integer numSeqLenCache = Integer.valueOf(curNumSeqIdx - 1);
+					final int[][] inputIdsForward = new int[batchSize][1];
+					for (int b = 0; b < batchSize; b++) {
+						inputIdsForward[b][0] = inputIds[b][curNumSeqIdx - 1];
+					}
+					hiddenState = model.forward(inputIdsForward, layersFusedQkv, numSeqLenCache);
+				}
 
 				final List<Integer> idxCandidates = new ArrayList<>();
 				final int[][] nextInputIds = new int[batchSize][];
-				for (int batch = 0; batch < batchSize; batch++) {
-					System.out.println("Batch " + batch);
-					final float[][] batchState = hiddenState[batch];
+				for (int b = 0; b < batchSize; b++) {
+					System.out.println("Batch " + b);
+					final float[][] batchState = hiddenState[b];
 					final float[] lastState = batchState[batchState.length - 1];
 					if (LOG.isLoggable(Level.FINE)) {
 						LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));
@@ -122,22 +137,31 @@ public class DemoVerboseMain {
 					String sToken = tokenizer.decode(idx);
 					System.out.println(" End: " + LocalDateTime.now());
 					System.out.println(" Token: " + sToken);
-					final List<String> listToken = listBatchesToken.get(batch);
+					final List<String> listToken = listBatchesToken.get(b);
 					listToken.add(sToken);
-					nextInputIds[batch] = tokenizer.appendToken(inputIds[batch], idx);
+					nextInputIds[b] = tokenizer.appendToken(inputIds[b], idx);
 				}
 
 				final int numCandidates = idxCandidates.size();
 				if (idxInf == 2 && numCandidates >= numBeams && numBeams > batchSize) {
 					inputIds = new int[numBeams][];
 					inputIds[0] = nextInputIds[0];
-					for (int j = 1; j < numBeams; j++) {
-						inputIds[j] = nextInputIds[0].clone();
-						final int idx = idxCandidates.get(numCandidates - 1 - j).intValue();
-						inputIds[j][inputIds[j].length - 1] = idx;
+					System.out.println("Switch to batch: #beams=" + numBeams);
+					for (int b = 1; b < numBeams; b++) {
+						inputIds[b] = nextInputIds[0].clone();
+						final int idx = idxCandidates.get(numCandidates - 1 - b).intValue();
+						final String currToken = tokenizer.decode(idx);
+						System.out.println(String.format("Beam %d: token %d (%s)",
+								b, idx, currToken));
+						inputIds[b][inputIds[b].length - 1] = idx;
 						final List<String> listToken = new ArrayList<>(listBatchesToken.get(0));
-						listToken.set(listToken.size() - 1, tokenizer.decode(idx));
+						listToken.set(listToken.size() - 1, currToken);
 						listBatchesToken.add(listToken);
+						for (int l = 0; l < model.getNumLayers(); l++) {
+							for (int j = 0; j < numTokenInput + maxToken; j++) {
+								System.arraycopy(layersFusedQkv[l][0][j], 0, layersFusedQkv[l][b][j], 0, 3 * model.getHiddenSize());
+							}
+						}
 					}
 				}
 				else {

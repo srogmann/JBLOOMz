@@ -73,13 +73,15 @@ public class BloomAttention {
 			final float[][][] residual, final boolean[][][][] attentionMask,
 			final float[][][] output) {
 		final int batchSize = hiddenStates.length;
-		final int numSeq = hiddenStates[0].length;
+		final int numSeq;
 		if (numSeqLenCache == null) {
+			numSeq = hiddenStates[0].length;
 			queryKeyValue.mult(hiddenStates, fusedQkv);
 		}
 		else {
 			// numSeqLenCache token-rows haven been processed already.
 			final int numSeqComputed = numSeqLenCache.intValue();
+			numSeq = numSeqComputed + 1;
 			if (LOG.isLoggable(Level.FINER)) {
 				LOG.finer(String.format("forward: numSeqComputed=%d", Integer.valueOf(numSeqComputed)));
 			}
@@ -155,7 +157,7 @@ public class BloomAttention {
 		// valueLayer[b + i * headDim][j][k] = fusedQkv[b][j][(i * 3 + 2) * headDim + k]
 		//
 		//float[][][][] multResult = new float[batchSize][numHeads][numSeq][numSeq];
-		final float[][][] contextLayer = new float[batchSize][numSeq][numHeads * headDim];
+		float[][][] contextLayer = new float[batchSize][numSeq][numHeads * headDim];
 		Tensor.bmmView4(multResult, fusedQkv, numSeq, 3, numHeads, headDim, 2, contextLayer, executor);
 
 		if (LOG.isLoggable(Level.FINER) ) {
@@ -165,6 +167,14 @@ public class BloomAttention {
 			}
 		}
 
+		if (numSeqLenCache != null) {
+			// We need the last token-row only.
+			float[][][] contextLayerLast = new float[batchSize][1][];
+			for (int b = 0; b < batchSize; b++) {
+				contextLayerLast[b][0] = contextLayer[b][numSeqLenCache.intValue()];
+			}
+			contextLayer = contextLayerLast;
+		}
 		dense.mult(contextLayer, output);
 
 		Tensor.add(output, residual, output);

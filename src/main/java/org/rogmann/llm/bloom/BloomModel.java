@@ -206,8 +206,7 @@ public class BloomModel implements TensorProvider {
 			final float[][][][] layersFusedQkv, final Integer numSeqLenCache) {
 		final int batchSize = inputIds.length;
 		final int seqLen = inputIds[0].length;
-		//final int totalSeqLen = (numSeqLenCache == null) ? seqLen : numSeqLenCache + seqLen;
-		final int totalSeqLen = seqLen;
+		final int totalSeqLen = (numSeqLenCache == null) ? seqLen : numSeqLenCache + seqLen;
 
 		float[][][] inputEmbeds = embeddings.wordEmbeddings(inputIds);
 		if (LOG.isLoggable(Level.FINE)) {
@@ -217,7 +216,7 @@ public class BloomModel implements TensorProvider {
 		}
 
 		// hidden states is a tensor of shape (batchSize, inputSize, hiddenSize).
-		final float[][][] hiddenStates = new float[batchSize][inputIds[0].length][];
+		final float[][][] hiddenStates = new float[batchSize][seqLen][];
 		for (int idxI = 0; idxI < batchSize; idxI++) {
 			final int i = idxI;
 			executor.startLoopTasks(seqLen, (jStart, jEnd) -> () -> {
@@ -234,7 +233,7 @@ public class BloomModel implements TensorProvider {
 		
 		final float[][] attentionMask = new float[batchSize][totalSeqLen];
 		for (int i = 0; i < batchSize; i++) {
-			Arrays.fill(attentionMask[0], 1.0f);
+			Arrays.fill(attentionMask[i], 1.0f);
 		}
 
 		final Tensor alibi = BloomAlibi.buildAlibiTensor(attentionMask, numHeads, executor);
@@ -253,7 +252,7 @@ public class BloomModel implements TensorProvider {
 			}
 		}
 
-		final float[][][] attentionResidual = new float[batchSize][totalSeqLen][hiddenSize];
+		final float[][][] attentionResidual = new float[batchSize][seqLen][hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
 			blocks[layer].forward(inputEmbeds, hiddenStates,
@@ -261,7 +260,7 @@ public class BloomModel implements TensorProvider {
 					causalMask, alibi, attentionResidual, hiddenStates);
 		}
 
-		for (int i = 0; i < hiddenStates.length; i++) {
+		for (int i = 0; i < batchSize; i++) {
 			for (int j = 0; j < seqLen; j++) {
 				hiddenStates[i][j] = lnF.normalize(hiddenStates[i][j]);
 			}
