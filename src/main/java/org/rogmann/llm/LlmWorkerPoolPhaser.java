@@ -60,6 +60,10 @@ public class LlmWorkerPoolPhaser implements LlmExecutor {
 
 	@Override
 	public void startLoopTasks(int n, LlmTaskLoopFunction taskFunction) {
+		if (n == 1) {
+			taskFunction.apply(0, 1).run();
+			return;
+		}
 		int blockSize = Math.max(1, n / nThreads);
 		int idxStart = 0;
 		int idxEnd = blockSize;
