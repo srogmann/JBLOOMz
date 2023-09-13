@@ -32,11 +32,12 @@ public class BloomGELU {
 		for (int i = 0; i < d1; i++) {
 			final float[][] m1 = input[i];
 			final float[][] m2 = output[i];
-			executor.startLoopTasks(d2, (jStart, jEnd) -> () -> {
-				for (int j = jStart; j < jEnd; j++) {
-					final float[] r1 = m1[j];
-					final float[] r2 = m2[j];
-					for (int k = 0; k < d3; k++) {
+			if (d2 == 1) {
+				final int j = 0;
+				final float[] r1 = m1[j];
+				final float[] r2 = m2[j];
+				executor.startLoopTasks(d3, (kStart, kEnd) -> () -> {
+					for (int k = kStart; k < kEnd; k++) {
 						final float x = r1[k];
 						final float z = 1f + 0.044715f * x * x;
 						final float y = 1.0f + (float) (Math.tanh(0.79788456f * x * z));
@@ -45,8 +46,25 @@ public class BloomGELU {
 							throw new IllegalStateException("Nan");
 						}
 					}
-				}
-			});
+				});
+			}
+			else {
+				executor.startLoopTasks(d2, (jStart, jEnd) -> () -> {
+					for (int j = jStart; j < jEnd; j++) {
+						final float[] r1 = m1[j];
+						final float[] r2 = m2[j];
+						for (int k = 0; k < d3; k++) {
+							final float x = r1[k];
+							final float z = 1f + 0.044715f * x * x;
+							final float y = 1.0f + (float) (Math.tanh(0.79788456f * x * z));
+							r2[k] = x * 0.5f * y;
+							if (Float.isNaN(r2[k])) {
+								throw new IllegalStateException("Nan");
+							}
+						}
+					}
+				});
+			}
 		}
 	}
 }

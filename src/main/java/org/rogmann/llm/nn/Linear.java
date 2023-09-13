@@ -54,19 +54,36 @@ public class Linear {
 					mat.length, mat[0].length,
 					output.length, output[0].length, output[0][0].length));
 		}
-		for (int idxB = 0; idxB < dimBatch; idxB++) {
-			final int b = idxB;
-			executor.startLoopTasks(d, (iStart, iEnd) -> () -> {
-				for (int i = iStart; i < iEnd; i++) {
-					for (int j = 0; j < dim1; j++) {
+		if (d == 1) {
+			for (int idxB = 0; idxB < dimBatch; idxB++) {
+				final int b = idxB;
+				final int i = 0;
+				executor.startLoopTasks(dim1, (jStart, jEnd) -> () -> {
+					for (int j = jStart; j < jEnd; j++) {
 						float sum = bias[j];
 						for (int k = 0; k < dim2; k++) {
 							sum += input[b][i][k] * mat[j][k];
 						}
 						output[b][i][j] = sum;
 					}
-				}
-			});
+				});
+			}
+		}
+		else {
+			for (int idxB = 0; idxB < dimBatch; idxB++) {
+				final int b = idxB;
+				executor.startLoopTasks(d, (iStart, iEnd) -> () -> {
+					for (int i = iStart; i < iEnd; i++) {
+						for (int j = 0; j < dim1; j++) {
+							float sum = bias[j];
+							for (int k = 0; k < dim2; k++) {
+								sum += input[b][i][k] * mat[j][k];
+							}
+							output[b][i][j] = sum;
+						}
+					}
+				});
+			}
 		}
 	}
 
@@ -88,14 +105,17 @@ public class Linear {
 		}
 		for (int idxB = 0; idxB < dimBatch; idxB++) {
 			final int b = idxB;
-			for (int i = 0; i < d; i++) {
-				for (int j = 0; j < dim1; j++) {
-					float sum = bias[j];
-					for (int k = 0; k < dim2; k++) {
-						sum += input[b][i][k] * mat[j][k];
+			for (int idxI = 0; idxI < d; idxI++) {
+				final int i = idxI;
+				executor.startLoopTasks(dim1, (jStart, jEnd) -> () -> {
+					for (int j = jStart; j < jEnd; j++) {
+						float sum = bias[j];
+						for (int k = 0; k < dim2; k++) {
+							sum += input[b][i][k] * mat[j][k];
+						}
+						output[b][startOffsetOutputDim2 + i][j] = sum;
 					}
-					output[b][startOffsetOutputDim2 + i][j] = sum;
-				}
+				});
 			}
 		}
 	}
