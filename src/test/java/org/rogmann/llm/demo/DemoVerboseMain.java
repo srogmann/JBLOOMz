@@ -64,15 +64,13 @@ public class DemoVerboseMain {
 	
 			tsStartInfer = Instant.now();
 			//String inputSentence = "Auf der Wiese läuft ein Hund hinter";
-			String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
-			//String inputSentence = "Translate to Chinese: I write a program in Java.";
+			//String inputSentence = "Der Hund heißt Karl. Die Katze heißt Mimi. Wie nennt Mimi den Hund?";
+			String inputSentence = "Translate to Chinese: I write a program in Java.";
 			//String inputSentence = "What is the capital of France?";
 			//String inputSentence = "Translate to chinese: cat.";
 			//String inputSentence = "¿Quién era Joan Miró?";
-			//String inputSentence = "Auf der Wiese steht eine Kuh unter ";
-			//String inputSentence = "Was macht der Prozess FIEBER_MESSEN? ";
-			//String inputSentence = "In Kleve ";
-			final int maxToken = 10;
+			final int maxToken = 7;
+			final boolean useCache = Boolean.TRUE.booleanValue(); // use fusedQkv-cache?
 			int[][] inputIds = tokenizer.encode(inputSentence);
 			final int numTokenInput = inputIds[0].length;
 			final int numBeams = maxBatchSize;
@@ -93,7 +91,7 @@ public class DemoVerboseMain {
 				System.out.println("Start: " + LocalDateTime.now());
 
 				final float[][][] hiddenState;
-				if (idxInf == 1) {
+				if (idxInf == 1 || !useCache) {
 					// First iteration, computes the fusedQkv-entries of the input-tokens.
 					hiddenState = model.forward(inputIds, layersFusedQkv, null);
 				}

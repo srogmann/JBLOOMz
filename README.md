@@ -27,7 +27,7 @@ Sample code (see src/test/java):
     			final BloomModel model = new BloomModel(modelReader, 1, executor);
 	    
     			String inputSentence = "Translate to Chinese: I write a program in Java.";
-    			final int maxToken = 10;
+    			final int maxToken = 7;
     			final List<String> listToken = model.computeNextTokens(tokenizer, model, inputSentence, maxToken);
     			System.out.println("Prompt: " + inputSentence);
     			final String sResult = listToken.stream().collect(Collectors.joining());
@@ -133,15 +133,17 @@ There are different implementations of LlmExecutor:
 * LlmWorkerPoolReentrantLock: Synchronizing the threads using reentrant locks.
 * LlmWorkerPoolBusySpin: A very CPU-intensive executor without JVM-based locking.
 
-The multi-threaded executors are faster than the single-threaded one. But even CPU-based pytorch is seven times faster. But there is [JEP 448](https://openjdk.org/jeps/448), the vector API! I haven't tried that yet.
+The multi-threaded executors are faster than the single-threaded one. But even CPU-based pytorch is some times faster. But there is [JEP 448](https://openjdk.org/jeps/448), the vector API! I haven't tried that yet.
 
 One question is how the different threads treat the float-arrays. I'm used to AtomicInteger and AtomicLong. But using millions of volatile floats? This implementation uses pure float\[\]\[\]\[\] so I can't guarantee that there are not race conditions reading floats when JIT optimizes the execution of the threads.
 
 A consolation is the loading of the model at the beginning which is fast.
 
-When this Java implementation needs about 15 seconds to generate "我在Java中写程序。</s>" (bloomz-560), pytorch and 🤗 Transformers do that in less than one second on the same machine, without using the GPU!
+The caching of fusedQkv (query-key-value tensors of the attention-part) speeds up the generation of the tokens after processing the input-tokens.
 
-Using the model bloomz-3b pytorch needs 3 seconds, Java about 82 seconds and about 13 - 14 GB heap space.
+When this Java implementation needs about two seconds (15 seconds without fusedQkv-cache) to generate "我在Java中写程序。</s>" (bloomz-560), pytorch and 🤗 Transformers do that in less than one second on the same machine, without using the GPU!
+
+Using the model bloomz-3b pytorch needs 3 seconds, Java about 13 seconds (82 seconds without fusedQkv-cache) and about 13 - 14 GB heap space.
 
 ## Getting a model
 
