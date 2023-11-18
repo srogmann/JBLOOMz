@@ -20,6 +20,7 @@ import org.rogmann.llm.ThreadProfiler;
 import org.rogmann.llm.bloom.BloomModel;
 import org.rogmann.llm.tokenizer.BPETokenizer;
 import org.rogmann.llm.tokenizer.Tokenizer;
+import org.rogmann.llm.visualize.ExportPPM;
 
 /**
  * Executes a text generation using a BLOOM based model.
@@ -27,6 +28,9 @@ import org.rogmann.llm.tokenizer.Tokenizer;
 public class DemoVerboseMain {
 	/** logger */
 	private static final Logger LOG = Logger.getLogger(DemoVerboseMain.class.getName());
+	
+	/** optional file-name to export fusedQkv-layers as portable bitmap */
+	private static final String FILENAME_FUSED_QKV_PPM = System.getProperty("jbloomz.fusedqkv.ppm.file");
 
 	/**
 	 * Entry method.
@@ -171,6 +175,9 @@ public class DemoVerboseMain {
 				final String sResult = listBatchesToken.get(batch).stream().collect(Collectors.joining());
 				System.out.println("Result " + batch + ":" + sResult);
 			}
+			if (FILENAME_FUSED_QKV_PPM != null) {
+				ExportPPM.exportFusedQkv(new File(FILENAME_FUSED_QKV_PPM), layersFusedQkv);
+			}
 		}
 		
 		final Instant tsEnd = Instant.now();
@@ -180,6 +187,5 @@ public class DemoVerboseMain {
 		if (profiler != null) {
 			profiler.stop();
 		}
-
 	}
 }
