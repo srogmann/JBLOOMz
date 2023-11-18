@@ -11,7 +11,7 @@ import org.rogmann.llm.LlmExecutor;
 public class Softmax {
 	/** logger */
 	private static final Logger LOG = Logger.getLogger(Softmax.class.getName());
-	/** <code>true</code> if a substraction of a value is necessary */
+	/** <code>true</code> if a subtraction of a value is necessary */
 	private static final AtomicBoolean SWITCHED_TO_SOFTMAX_MINUS_MAX = new AtomicBoolean(false);
 	
 
