@@ -94,7 +94,7 @@ public class DemoVerboseMain {
 				}
 				System.out.println("Start: " + LocalDateTime.now());
 
-				final float[][][] hiddenState;
+				final float[][][][] hiddenState;
 				if (idxInf == 1 || !useCache) {
 					// First iteration, computes the fusedQkv-entries of the input-tokens.
 					hiddenState = model.forward(inputIds, layersFusedQkv, null);
@@ -114,7 +114,7 @@ public class DemoVerboseMain {
 				final int[][] nextInputIds = new int[batchSize][];
 				for (int b = 0; b < batchSize; b++) {
 					System.out.println("Batch " + b);
-					final float[][] batchState = hiddenState[b];
+					final float[][] batchState = hiddenState[model.getNumLayers()][b];
 					final float[] lastState = batchState[batchState.length - 1];
 					if (LOG.isLoggable(Level.FINE)) {
 						LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));

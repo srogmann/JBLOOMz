@@ -77,7 +77,7 @@ public class DemoPromptLoopMain {
 					for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
 						final int batchSize = inputIds.length;
 		
-						final float[][][] hiddenState;
+						final float[][][][] hiddenState;
 						if (idxInf == 1 || !useCache) {
 							// First iteration, computes the fusedQkv-entries of the input-tokens.
 							hiddenState = model.forward(inputIds, layersFusedQkv, null);
@@ -96,7 +96,7 @@ public class DemoPromptLoopMain {
 						final List<Integer> idxCandidates = new ArrayList<>();
 						final int[][] nextInputIds = new int[batchSize][];
 						for (int b = 0; b < batchSize; b++) {
-							final float[][] batchState = hiddenState[b];
+							final float[][] batchState = hiddenState[model.getNumLayers()][b];
 							final float[] lastState = batchState[batchState.length - 1];
 							if (LOG.isLoggable(Level.FINE)) {
 								LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));

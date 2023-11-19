@@ -192,7 +192,7 @@ public class BloomModel implements TensorProvider {
 		// We use the same temporary tensor in each layer.
 		Arrays.fill(layersFusedQkv, fusedQkv);
 		final Integer numSeqLenCache = null;
-		return forward(inputIds, layersFusedQkv, numSeqLenCache);
+		return forward(inputIds, layersFusedQkv, numSeqLenCache)[numLayers];
 	}
 
 	/**
@@ -200,9 +200,9 @@ public class BloomModel implements TensorProvider {
 	 * @param inputIds input-ids (batchSize, numSeq)
 	 * @param layersFusedQkv fusedQkv-tensor to be used in attention-computation (numLayers, batchSize, numSeq, 3 * hiddenSize)
 	 * @param numSeqLenCache <code>null</code> if no cache is used, numSeq in fusedQkv otherwise
-	 * @return hidden states (batchSize, seqLen, dim of weights)
+	 * @return hidden states (layers + 1, batchSize, seqLen, dim of weights)
 	 */
-	public float[][][] forward(final int[][] inputIds,
+	public float[][][][] forward(final int[][] inputIds,
 			final float[][][][] layersFusedQkv, final Integer numSeqLenCache) {
 		final int batchSize = inputIds.length;
 		final int seqLen = inputIds[0].length;
@@ -216,17 +216,17 @@ public class BloomModel implements TensorProvider {
 		}
 
 		// hidden states is a tensor of shape (batchSize, inputSize, hiddenSize).
-		final float[][][] hiddenStates = new float[batchSize][seqLen][];
+		final float[][][][] hiddenStates = new float[numLayers + 1][batchSize][seqLen][hiddenSize];
 		for (int idxI = 0; idxI < batchSize; idxI++) {
 			final int i = idxI;
 			executor.startLoopTasks(seqLen, (jStart, jEnd) -> () -> {
 				for (int j = 0; j < seqLen; j++) {
-					hiddenStates[i][j] = wordEmbeddingsLayerNorm.normalize(inputEmbeds[i][j]);
+					hiddenStates[0][i][j] = wordEmbeddingsLayerNorm.normalize(inputEmbeds[i][j]);
 				}
 			});
 		}
 		if (LOG.isLoggable(Level.FINER)) {
-			for (float[] row : hiddenStates[0]) {
+			for (float[] row : hiddenStates[0][0]) {
 				LOG.finer("Hidden-Row: " + Arrays.toString(Arrays.copyOfRange(row, 0, 3)));
 			}
 		}
@@ -255,18 +255,18 @@ public class BloomModel implements TensorProvider {
 		final float[][][] attentionResidual = new float[batchSize][seqLen][hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
-			blocks[layer].forward(hiddenStates,
+			blocks[layer].forward(hiddenStates[layer],
 					layersFusedQkv[layer], numSeqLenCache,
-					causalMask, alibi, attentionResidual, hiddenStates);
+					causalMask, alibi, attentionResidual, hiddenStates[layer + 1]);
 		}
 
 		for (int i = 0; i < batchSize; i++) {
 			for (int j = 0; j < seqLen; j++) {
-				hiddenStates[i][j] = lnF.normalize(hiddenStates[i][j]);
+				hiddenStates[numLayers][i][j] = lnF.normalize(hiddenStates[numLayers][i][j]);
 			}
 		}
 		if (LOG.isLoggable(Level.FINER)) {
-			for (float[] row : hiddenStates[0]) {
+			for (float[] row : hiddenStates[0][0]) {
 				LOG.finer("Last normalize: " + Arrays.toString(Arrays.copyOfRange(row, 0, 3)));
 			}
 		}
