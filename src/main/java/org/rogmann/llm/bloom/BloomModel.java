@@ -255,7 +255,7 @@ public class BloomModel implements TensorProvider {
 		final float[][][] attentionResidual = new float[batchSize][seqLen][hiddenSize];
 		for(int layer = 0; layer < numLayers; layer++) {
 			LOG.fine("Compute Layer " + layer);
-			blocks[layer].forward(inputEmbeds, hiddenStates,
+			blocks[layer].forward(hiddenStates,
 					layersFusedQkv[layer], numSeqLenCache,
 					causalMask, alibi, attentionResidual, hiddenStates);
 		}
