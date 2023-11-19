@@ -31,6 +31,8 @@ public class DemoVerboseMain {
 	
 	/** optional file-name to export fusedQkv-layers as portable bitmap */
 	private static final String FILENAME_FUSED_QKV_PPM = System.getProperty("jbloomz.fusedqkv.ppm.file");
+	/** optional file-name to export hidden states as portable bitmap */
+	private static final String FILENAME_HIDDEN_STATES_PPM = System.getProperty("jbloomz.hiddenStates.ppm.file");
 
 	/**
 	 * Entry method.
@@ -85,6 +87,9 @@ public class DemoVerboseMain {
 			listBatchesToken.add(new ArrayList<>());
 			final float[][][][] layersFusedQkv = new float[model.getNumLayers()][maxBatchSize]
 					[numTokenInput + maxToken][3 * model.getHiddenSize()];
+			float[][][][] hiddenStatesOut = new float[model.getNumLayers() + 1][maxBatchSize][numTokenInput - 1 + maxToken][];
+			LOG.info(String.format("numTokenInput=%d, maxToken=%d", Integer.valueOf(numTokenInput), Integer.valueOf(maxToken)));
+			int idxTokenStatesOut = 0;
 			for(int idxInf = 1; idxInf <= maxToken; idxInf++) {
 				System.out.println("");
 				System.out.println("Inference " + idxInf);
@@ -94,7 +99,7 @@ public class DemoVerboseMain {
 				}
 				System.out.println("Start: " + LocalDateTime.now());
 
-				final float[][][] hiddenState;
+				final float[][][][] hiddenState;
 				if (idxInf == 1 || !useCache) {
 					// First iteration, computes the fusedQkv-entries of the input-tokens.
 					hiddenState = model.forward(inputIds, layersFusedQkv, null);
@@ -109,12 +114,21 @@ public class DemoVerboseMain {
 					}
 					hiddenState = model.forward(inputIdsForward, layersFusedQkv, numSeqLenCache);
 				}
+				// Save the hidden states.
+				for (int k = 0; k < hiddenState[0][0].length; k++) {
+					for (int i = 0; i <= model.getNumLayers(); i++) {
+						for (int j = 0; j < batchSize; j++) {
+							hiddenStatesOut[i][j][idxTokenStatesOut] = hiddenState[i][j][k];
+						}
+					}
+					idxTokenStatesOut++;
+				}
 
 				final List<Integer> idxCandidates = new ArrayList<>();
 				final int[][] nextInputIds = new int[batchSize][];
 				for (int b = 0; b < batchSize; b++) {
 					System.out.println("Batch " + b);
-					final float[][] batchState = hiddenState[b];
+					final float[][] batchState = hiddenState[model.getNumLayers()][b];
 					final float[] lastState = batchState[batchState.length - 1];
 					if (LOG.isLoggable(Level.FINE)) {
 						LOG.fine("Last State: " + Arrays.toString(Arrays.copyOfRange(lastState, 0, 3)));
@@ -177,6 +191,9 @@ public class DemoVerboseMain {
 			}
 			if (FILENAME_FUSED_QKV_PPM != null) {
 				ExportPPM.exportFusedQkv(new File(FILENAME_FUSED_QKV_PPM), layersFusedQkv);
+			}
+			if (FILENAME_HIDDEN_STATES_PPM != null) {
+				ExportPPM.exportHiddenStates(new File(FILENAME_HIDDEN_STATES_PPM), hiddenStatesOut);
 			}
 		}
 		

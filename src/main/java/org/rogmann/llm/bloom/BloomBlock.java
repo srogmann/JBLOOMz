@@ -100,7 +100,6 @@ public class BloomBlock {
 
 	/**
 	 * Computes a BLOOM-block.
-	 * @param inputEmbeds input embeddings
 	 * @param hiddenStates tensor (batchSize, numSeq, hiddenSize)
 	 * @param fusedQkv temporary tensor ([batchSize][numSeq][3 * dimHidden])
 	 * @param numSeqLenCache <code>null</code> if no cache is used, numSeq in fusedQkv otherwise
@@ -109,12 +108,12 @@ public class BloomBlock {
 	 * @param attentionResidual attention residual
 	 * @param output output tensor (batchSize, numSeq, hiddenSize)
 	 */
-	public void forward(final float[][][] inputEmbeds, final float[][][] hiddenStates,
+	public void forward(final float[][][] hiddenStates,
 			final float[][][] fusedQkv, final Integer numSeqLenCache,
 			final boolean[][][][] attentionMask, final Tensor alibi, final float[][][] attentionResidual,
 			final float[][][] output) {
-		final int batchSize = inputEmbeds.length;
-		final int numSeq = inputEmbeds[0].length;
+		final int batchSize = hiddenStates.length;
+		final int numSeq = hiddenStates[0].length;
 		final float[][][] layernormOutput = new float[batchSize][numSeq][];
 		for (int idxI = 0; idxI < batchSize; idxI++) {
 			final int i = idxI;
